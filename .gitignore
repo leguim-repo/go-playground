@@ -3,3 +3,5 @@
 .env
 
 
+/TheDocker/mosquitto/log/
+/TheDocker/mosquitto/data/

@@ -1,4 +1,4 @@
-package main
+package bitcoin
 
 import (
 	"encoding/json"
@@ -30,7 +30,7 @@ type subscribeMessage struct {
 	Channels   []interface{} `json:"channels"`
 }
 
-func main() {
+func BitCoin() {
 	// Connect to the WebSocket server
 	u := url.URL{Scheme: "wss", Host: "ws-feed.exchange.coinbase.com"}
 
