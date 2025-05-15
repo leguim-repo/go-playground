@@ -1,9 +1,9 @@
 package main
 
 import (
-	"go-playground/internal/websockets/wige"
+	"go-playground/internal/websockets/wigeracedata"
 )
 
 func main() {
-	wige.WigeRaceData()
+	wigeracedata.WigeRaceData()
 }
