@@ -3,7 +3,7 @@ package wigeracedata
 import (
 	"encoding/json"
 	"github.com/gorilla/websocket"
-	"go-playground/pkg/timeutils"
+	"go-playground/pkg/datetimeutils"
 	"log"
 	"net/url"
 	"os"
@@ -34,7 +34,7 @@ func WigeRaceData() {
 	raceDataInitMessage := leaderBoardInitMessage{
 		EventId:         vln,
 		EventPid:        "[0, 4]",
-		ClientLocalTime: timeutils.GetUnixTimestampWithMilliseconds(),
+		ClientLocalTime: datetimeutils.GetUnixTimestampWithMilliseconds(),
 	}
 
 	log.Printf("Wige Race Data WS Client here")
