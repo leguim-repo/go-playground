@@ -14,8 +14,17 @@ build: ## Target to build all commands in cmd/*/*
 	@echo "Building all commands..."
 	@mkdir -p bin
 	@for item in cmd/*/*; do \
-		echo "Compiling $$item..."; \
-		go build -o "bin/$$(basename "$$item")" "./$$item"; \
+		echo "✳️ Compiling $$item..."; \
+		if [[ "$$item" =~ "main.go" ]]; then \
+          dir_name=$$(dirname "$$item"); \
+          new_binary_name=$$(basename "$$dir_name"); \
+		  echo "⚠️ Found 'main.go' in '$$item' changing name of bin. New bin name: $$new_binary_name"; \
+          go build -o "bin/$$(basename "$$new_binary_name")" "./$$item"; \
+		  echo "✅ Compiled"; \
+        else \
+          go build -o "bin/$$(basename "$$item")" "./$$item"; \
+ 		  echo "✅ Compiled"; \
+	    fi \
 	done
 	@echo "All commands built successfully."
 
