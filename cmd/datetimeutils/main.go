@@ -14,7 +14,7 @@ func main() {
 
 	// Using CreateTimestamp()
 	// Let's use the time obtained from Now() as an example input
-	formattedTimeStamp, err := datetimeutils.CreateTimeStamp(currentTimeUTC)
+	formattedTimeStamp, err := datetimeutils.CreateFileTimeStamp(currentTimeUTC)
 	if err != nil {
 		fmt.Println("Error creating timestamp:", err)
 	} else {
@@ -52,4 +52,8 @@ func main() {
 	} else {
 		fmt.Println("Unix timestamp (seconds) from date string:", unixSeconds)
 	}
+
+	fmt.Printf("formattedTimeStamp: %s type: %T Is valid: %t\n", formattedTimeStamp, formattedTimeStamp, formattedTimeStamp.IsValid())
+	noValidTimeStamp := datetimeutils.FileTimeStamp("20250518194131.371428")
+	fmt.Printf("noValidTimeStamp: %s type: %T Is valid: %t\n", noValidTimeStamp, noValidTimeStamp, noValidTimeStamp.IsValid())
 }

@@ -21,12 +21,14 @@ type FileTimeStamp string
 // IsValid Method for valid FileTimeStamp
 func (e FileTimeStamp) IsValid() bool {
 	// Logic of implementation
+	if string(e)[dotPositionInFileTimeStamp] != '.' {
+		return true
+	}
+
 	if strings.Contains(string(e), ".") {
-		return true
+		return false
 	}
-	if string(e)[dotPositionInFileTimeStamp] == '.' {
-		return true
-	}
+
 	return false
 }
 
@@ -48,7 +50,7 @@ func Now() time.Time {
 
 // CreateTimeStamp formats a given time.Time object into a string
 // using the specified format layout and timezone (Europe/Berlin).
-func CreateTimeStamp(fileCreationDate time.Time) (FileTimeStamp, error) {
+func CreateFileTimeStamp(fileCreationDate time.Time) (FileTimeStamp, error) {
 	// Load the Europe/Berlin timezone location
 	loc, err := time.LoadLocation("Europe/Berlin")
 	if err != nil {
