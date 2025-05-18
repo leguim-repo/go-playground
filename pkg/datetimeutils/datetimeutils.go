@@ -3,6 +3,7 @@ package datetimeutils
 import (
 	"fmt"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -42,8 +43,11 @@ func CreateTimeStamp(fileCreationDate time.Time) (string, error) {
 	// Convert the input time to the Berlin timezone
 	timeInBerlin := fileCreationDate.In(loc)
 
+	timeInBerlinValue := timeInBerlin.Format(timestampLayout)
+	timeInBerlinValue = strings.Replace(timeInBerlinValue, ".", "", -1)
+
 	// Format the time using the defined timestamp layout
-	return timeInBerlin.Format(timestampLayout), nil
+	return timeInBerlinValue, nil
 }
 
 func CreatePartitionStamp(fileCreationDate time.Time) (string, error) { // Load the Europe/Berlin timezone location
@@ -103,4 +107,19 @@ func ConvertToUnixTimestamp(dateStr string) (float64, error) {
 	// Get the Unix timestamp in nanoseconds and convert to seconds (float64)
 	// This is equivalent to Python's dt.timestamp() which returns a float.
 	return float64(t.UnixNano()) / float64(time.Second), nil
+}
+
+func FromTimeStampToDateStr(timeStamp string) string {
+	posicion := 14
+	// Verificar que la posición sea válida
+	if posicion < 0 || posicion >= len(timeStamp) {
+		return timeStamp // No hacer nada si la posición es inválida
+	}
+
+	// Dividir la string en dos partes: antes de la posición y después de la posición
+	parteAnterior := timeStamp[:posicion]
+	partePosterior := timeStamp[posicion:]
+
+	// Concatenar las partes con el punto en medio
+	return parteAnterior + "." + partePosterior
 }
