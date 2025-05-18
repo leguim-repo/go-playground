@@ -7,18 +7,34 @@ import (
 	"time"
 )
 
+// Define the layouts corresponding to the Python formats
+// Go's time formatting uses a reference time: Mon Jan 2 15:04:05 MST 2006
+const (
+	partitionLayout            = "20060102"
+	timestampLayout            = "20060102150405.000000" // .000000 for microseconds
+	dotPositionInFileTimeStamp = 14
+)
+
+// FileTimeStamp New type based on string
+type FileTimeStamp string
+
+// IsValid Method for valid FileTimeStamp
+func (e FileTimeStamp) IsValid() bool {
+	// Logic of implementation
+	if strings.Contains(string(e), ".") {
+		return true
+	}
+	if string(e)[dotPositionInFileTimeStamp] == '.' {
+		return true
+	}
+	return false
+}
+
 // GetUnixTimestampWithMilliseconds return a Unix timestamp with milliseconds
 func GetUnixTimestampWithMilliseconds() string {
 	timestamp := time.Now().UnixMilli()
 	return strconv.FormatInt(timestamp, 10)
 }
-
-// Define the layouts corresponding to the Python formats
-// Go's time formatting uses a reference time: Mon Jan 2 15:04:05 MST 2006
-const (
-	partitionLayout = "20060102"
-	timestampLayout = "20060102150405.000000" // .000000 for microseconds
-)
 
 // Now gets the current time in UTC, removing timezone information.
 // In Go, a time.Time object always has a location. Returning time.UTC()
@@ -32,7 +48,7 @@ func Now() time.Time {
 
 // CreateTimeStamp formats a given time.Time object into a string
 // using the specified format layout and timezone (Europe/Berlin).
-func CreateTimeStamp(fileCreationDate time.Time) (string, error) {
+func CreateTimeStamp(fileCreationDate time.Time) (FileTimeStamp, error) {
 	// Load the Europe/Berlin timezone location
 	loc, err := time.LoadLocation("Europe/Berlin")
 	if err != nil {
@@ -47,7 +63,7 @@ func CreateTimeStamp(fileCreationDate time.Time) (string, error) {
 	timeInBerlinValue = strings.Replace(timeInBerlinValue, ".", "", -1)
 
 	// Format the time using the defined timestamp layout
-	return timeInBerlinValue, nil
+	return FileTimeStamp(timeInBerlinValue), nil
 }
 
 func CreatePartitionStamp(fileCreationDate time.Time) (string, error) { // Load the Europe/Berlin timezone location
@@ -72,16 +88,11 @@ func UnixTimestampWithMilliseconds() int64 {
 	return time.Now().UTC().UnixNano() / int64(time.Millisecond)
 }
 
-// DateAndTimeFromTod converts a Unix timestamp string (in milliseconds)
+// ConvertUnixToDateTime converts a Unix timestamp (in milliseconds)
 // back to a time.Time object.
-func DateAndTimeFromTod(unixTimestampStr string) (time.Time, error) {
-	// Parse the string as a float64 to handle potential fractional milliseconds
-	millisecondsFloat, err := strconv.ParseFloat(unixTimestampStr, 64)
-	if err != nil {
-		// Return zero time and error if parsing fails
-		return time.Time{}, fmt.Errorf("failed to parse unix timestamp string: %w", err)
-	}
-
+func ConvertUnixToDateTime(unixTimestamp int64) (time.Time, error) {
+	//Convert to float
+	millisecondsFloat := float64(unixTimestamp)
 	// Convert milliseconds to seconds (float)
 	secondsFloat := millisecondsFloat / 1000.0
 
@@ -109,17 +120,13 @@ func ConvertToUnixTimestamp(dateStr string) (float64, error) {
 	return float64(t.UnixNano()) / float64(time.Second), nil
 }
 
-func FromTimeStampToDateStr(timeStamp string) string {
-	posicion := 14
-	// Verificar que la posición sea válida
-	if posicion < 0 || posicion >= len(timeStamp) {
-		return timeStamp // No hacer nada si la posición es inválida
+func ConvertTimeStampToDateStr(timeStamp FileTimeStamp) string {
+	// Verify position is valid
+	if dotPositionInFileTimeStamp >= len(timeStamp) {
+		return string(timeStamp)
 	}
+	parteAnterior := timeStamp[:dotPositionInFileTimeStamp]
+	partePosterior := timeStamp[dotPositionInFileTimeStamp:]
 
-	// Dividir la string en dos partes: antes de la posición y después de la posición
-	parteAnterior := timeStamp[:posicion]
-	partePosterior := timeStamp[posicion:]
-
-	// Concatenar las partes con el punto en medio
-	return parteAnterior + "." + partePosterior
+	return string(parteAnterior + "." + partePosterior)
 }

@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"go-playground/pkg/datetimeutils"
-	"strconv"
 )
 
 func main() {
@@ -37,8 +36,7 @@ func main() {
 
 	// Using DateAndTimeFromTod()
 	// Example timestamp string (milliseconds)
-	exampleUnixMillisStr := strconv.FormatInt(unixMillis, 10) // Example: Represents a time in the past
-	timeFromUnixMillis, err := datetimeutils.DateAndTimeFromTod(exampleUnixMillisStr)
+	timeFromUnixMillis, err := datetimeutils.ConvertUnixToDateTime(unixMillis)
 	if err != nil {
 		fmt.Println("Error converting unix timestamp string:", err)
 	} else {
@@ -47,9 +45,7 @@ func main() {
 
 	// Using ConvertToUnixTimestamp()
 	// Example date string matching the timestampLayout
-	//exampleDateStr := "20230315100000.500000" // Example: March 15, 2023 10:00:00.500000 UTC
-	//exampleDateStr := datetimeutils.FromTimeStampToDateStr("20230315100000500000") // Example: March 15, 2023 10:00:00.500000 UTC
-	exampleDateStr := datetimeutils.FromTimeStampToDateStr(formattedTimeStamp) // Example: March 15, 2023 10:00:00.500000 UTC
+	exampleDateStr := datetimeutils.ConvertTimeStampToDateStr(formattedTimeStamp) // Example: March 15, 2023 10:00:00.500000 UTC
 	unixSeconds, err := datetimeutils.ConvertToUnixTimestamp(exampleDateStr)
 	if err != nil {
 		fmt.Println("Error converting date string to unix timestamp:", err)
