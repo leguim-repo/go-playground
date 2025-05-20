@@ -5,5 +5,5 @@ import (
 )
 
 func main() {
-	usescases.UsecaseMysqlUserRepository()
+	usescases.UseCaseMysqlUserRepository()
 }

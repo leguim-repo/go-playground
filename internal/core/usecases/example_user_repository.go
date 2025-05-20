@@ -11,7 +11,7 @@ import (
 	"go-playground/internal/core/infrastructure/repositories"
 )
 
-func UsecaseMysqlUserRepository() {
+func UseCaseMysqlUserRepository() {
 	dsn := "root:toor@tcp(127.0.0.1:3306)/database_name?parseTime=true"
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -71,6 +71,24 @@ func UsecaseMysqlUserRepository() {
 		log.Fatalf("Error getting user by email: %v", err)
 	}
 	fmt.Printf("Found user by email: %+v\n", foundUserByEmail)
+
+	// Get all users
+	allUsers, err := userRepo.GetAllUsers(ctx)
+	if err != nil {
+		log.Fatalf("Error getting all users: %v", err)
+	}
+	fmt.Println("\n--- List of users ---")
+	for _, user := range allUsers {
+		fmt.Printf(
+			"ID: %d, Name: %s, Email: %s, Created at: %s, Updated at: %s\n",
+			user.ID,
+			user.Name,
+			user.Email,
+			user.CreatedAt.Format("2006-01-02 15:04:05"), // Format time.Time for best visualization
+			user.UpdatedAt.Format("2006-01-02 15:04:05"),
+		)
+	}
+	fmt.Println("------------------------")
 
 	// Delete user
 	err = userRepo.Delete(ctx, newUser.ID)

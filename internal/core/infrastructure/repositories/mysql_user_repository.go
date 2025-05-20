@@ -23,6 +23,7 @@ func NewMySQLUserRepository(db *sql.DB) *MySQLUserRepository {
 func (r *MySQLUserRepository) GetByID(ctx context.Context, id int) (*models.User, error) {
 	user := &models.User{}
 	query := "SELECT id, name, email, created_at, updated_at FROM users WHERE id = ?"
+	// QueryRowContext when we want to obtain only one row
 	err := r.db.QueryRowContext(ctx, query, id).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("user with ID %d not found", id)
@@ -37,6 +38,7 @@ func (r *MySQLUserRepository) GetByID(ctx context.Context, id int) (*models.User
 func (r *MySQLUserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
 	user := &models.User{}
 	query := "SELECT id, name, email, created_at, updated_at FROM users WHERE email = ?"
+	// QueryRowContext when we want to obtain only one row
 	err := r.db.QueryRowContext(ctx, query, email).Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
 	if err == sql.ErrNoRows {
 		return nil, fmt.Errorf("user with email '%s' not found", email)
@@ -50,6 +52,7 @@ func (r *MySQLUserRepository) GetByEmail(ctx context.Context, email string) (*mo
 // Create implements the Create method of the UserRepository interface
 func (r *MySQLUserRepository) Create(ctx context.Context, user *models.User) error {
 	query := "INSERT INTO users (name, email, created_at, updated_at) VALUES (?, ?, ?, ?)"
+	// ExecContext is used for modify one row for example update insert delete
 	result, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.CreatedAt, user.UpdatedAt)
 	if err != nil {
 		return fmt.Errorf("error creating user: %w", err)
@@ -65,6 +68,7 @@ func (r *MySQLUserRepository) Create(ctx context.Context, user *models.User) err
 // Update implements the Update method of the UserRepository interface
 func (r *MySQLUserRepository) Update(ctx context.Context, user *models.User) error {
 	query := "UPDATE users SET name = ?, email = ?, updated_at = ? WHERE id = ?"
+	// ExecContext is used for modify one row for example update insert delete
 	_, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.UpdatedAt, user.ID)
 	if err != nil {
 		return fmt.Errorf("error updating user: %w", err)
@@ -75,9 +79,37 @@ func (r *MySQLUserRepository) Update(ctx context.Context, user *models.User) err
 // Delete implements the Delete method of the UserRepository interface
 func (r *MySQLUserRepository) Delete(ctx context.Context, id int) error {
 	query := "DELETE FROM users WHERE id = ?"
+	// ExecContext is used for modify one row for example update insert delete
 	_, err := r.db.ExecContext(ctx, query, id)
 	if err != nil {
 		return fmt.Errorf("error deleting user: %w", err)
 	}
 	return nil
+}
+
+func (r *MySQLUserRepository) GetAllUsers(ctx context.Context) ([]*models.User, error) {
+	var users []*models.User
+
+	query := "SELECT * FROM users"
+	rows, err := r.db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("error querying all users: %w", err)
+	}
+
+	defer rows.Close()
+
+	for rows.Next() {
+		user := &models.User{}
+		err := rows.Scan(&user.ID, &user.Name, &user.Email, &user.CreatedAt, &user.UpdatedAt)
+		if err != nil {
+			return nil, fmt.Errorf("error scanning user row: %w", err)
+		}
+		users = append(users, user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, fmt.Errorf("error iterating over user rows: %w", err)
+	}
+
+	return users, nil
 }
