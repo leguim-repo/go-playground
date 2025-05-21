@@ -12,8 +12,8 @@ import (
 )
 
 // mysqlUserRepository is an implementation of UserRepository for MySQL
-// Take attention that db parameter it's MySQL Client passed as a dependency injection
-// This NOT is EXPORTED
+// Note that the db field is a MySQL client passed via dependency injection
+// This struct IS UNEXPORTED
 type mysqlUserRepository struct {
 	db                    *sql.DB
 	justAnotherDependency string
@@ -21,7 +21,8 @@ type mysqlUserRepository struct {
 }
 
 // NewMySQLUserRepository creates a new instance of mysqlUserRepository
-// This is EXPORTED and can be used by anywhere
+// This is EXPORTED and can be used by any other package
+// In fact this is a constructor
 func NewMySQLUserRepository(clientDb *sql.DB, tag string) repositories.UserRepository {
 	logger := thelogger.NewTheLogger()
 
