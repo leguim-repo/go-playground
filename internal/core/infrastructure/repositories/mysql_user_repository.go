@@ -8,7 +8,7 @@ import (
 	"go-playground/internal/core/domain/repositories"
 	"go-playground/pkg/thelogger"
 
-	_ "github.com/go-sql-driver/mysql" // Driver de MySQL
+	_ "github.com/go-sql-driver/mysql" // MySQL Driver
 )
 
 // mysqlUserRepository is an implementation of UserRepository for MySQL
