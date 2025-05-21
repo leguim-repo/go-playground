@@ -5,22 +5,36 @@ import (
 	"database/sql"
 	"fmt"
 	"go-playground/internal/core/domain/models"
+	"go-playground/internal/core/domain/repositories"
+	"go-playground/pkg/thelogger"
 
 	_ "github.com/go-sql-driver/mysql" // Driver de MySQL
 )
 
-// MySQLUserRepository is an implementation of UserRepository for MySQL
-type MySQLUserRepository struct {
-	db *sql.DB
+// mysqlUserRepository is an implementation of UserRepository for MySQL
+// Take attention that db parameter it's MySQL Client passed as a dependency injection
+// This NOT is EXPORTED
+type mysqlUserRepository struct {
+	db                    *sql.DB
+	justAnotherDependency string
+	logger                *thelogger.TheLogger
 }
 
-// NewMySQLUserRepository creates a new instance of MySQLUserRepository
-func NewMySQLUserRepository(db *sql.DB) *MySQLUserRepository {
-	return &MySQLUserRepository{db: db}
+// NewMySQLUserRepository creates a new instance of mysqlUserRepository
+// This is EXPORTED and can be used by anywhere
+func NewMySQLUserRepository(clientDb *sql.DB, tag string) repositories.UserRepository {
+	logger := thelogger.NewTheLogger()
+
+	return &mysqlUserRepository{
+		db:                    clientDb,
+		justAnotherDependency: tag,
+		logger:                logger,
+	}
 }
 
 // GetByID implements the GetByID method of the UserRepository interface
-func (r *MySQLUserRepository) GetByID(ctx context.Context, id int) (*models.User, error) {
+func (r *mysqlUserRepository) GetByID(ctx context.Context, id int) (*models.User, error) {
+	r.logger.Debug("GetByID")
 	user := &models.User{}
 	query := "SELECT id, name, email, created_at, updated_at FROM users WHERE id = ?"
 	// QueryRowContext when we want to obtain only one row
@@ -35,7 +49,8 @@ func (r *MySQLUserRepository) GetByID(ctx context.Context, id int) (*models.User
 }
 
 // GetByEmail implements the GetByEmail method of the UserRepository interface
-func (r *MySQLUserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+func (r *mysqlUserRepository) GetByEmail(ctx context.Context, email string) (*models.User, error) {
+	r.logger.Debug("GetByEmail")
 	user := &models.User{}
 	query := "SELECT id, name, email, created_at, updated_at FROM users WHERE email = ?"
 	// QueryRowContext when we want to obtain only one row
@@ -50,7 +65,7 @@ func (r *MySQLUserRepository) GetByEmail(ctx context.Context, email string) (*mo
 }
 
 // Create implements the Create method of the UserRepository interface
-func (r *MySQLUserRepository) Create(ctx context.Context, user *models.User) error {
+func (r *mysqlUserRepository) Create(ctx context.Context, user *models.User) error {
 	query := "INSERT INTO users (name, email, created_at, updated_at) VALUES (?, ?, ?, ?)"
 	// ExecContext is used for modify one row for example update insert delete
 	result, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.CreatedAt, user.UpdatedAt)
@@ -66,7 +81,7 @@ func (r *MySQLUserRepository) Create(ctx context.Context, user *models.User) err
 }
 
 // Update implements the Update method of the UserRepository interface
-func (r *MySQLUserRepository) Update(ctx context.Context, user *models.User) error {
+func (r *mysqlUserRepository) Update(ctx context.Context, user *models.User) error {
 	query := "UPDATE users SET name = ?, email = ?, updated_at = ? WHERE id = ?"
 	// ExecContext is used for modify one row for example update insert delete
 	_, err := r.db.ExecContext(ctx, query, user.Name, user.Email, user.UpdatedAt, user.ID)
@@ -77,7 +92,8 @@ func (r *MySQLUserRepository) Update(ctx context.Context, user *models.User) err
 }
 
 // Delete implements the Delete method of the UserRepository interface
-func (r *MySQLUserRepository) Delete(ctx context.Context, id int) error {
+func (r *mysqlUserRepository) Delete(ctx context.Context, id int) error {
+	r.logger.Debug("Delete")
 	query := "DELETE FROM users WHERE id = ?"
 	// ExecContext is used for modify one row for example update insert delete
 	_, err := r.db.ExecContext(ctx, query, id)
@@ -87,7 +103,8 @@ func (r *MySQLUserRepository) Delete(ctx context.Context, id int) error {
 	return nil
 }
 
-func (r *MySQLUserRepository) GetAllUsers(ctx context.Context) ([]*models.User, error) {
+func (r *mysqlUserRepository) GetAllUsers(ctx context.Context) ([]*models.User, error) {
+	r.logger.Debug("GetAllUsers")
 	var users []*models.User
 
 	query := "SELECT * FROM users"

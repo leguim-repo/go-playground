@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"go-playground/pkg/thelogger"
 	"log"
 	"time"
 
@@ -12,6 +13,10 @@ import (
 )
 
 func UseCaseMysqlUserRepository() {
+
+	logger := thelogger.NewTheLogger()
+	logger.Info("Hello World")
+
 	dsn := "root:toor@tcp(127.0.0.1:3306)/database_name?parseTime=true"
 	db, err := sql.Open("mysql", dsn)
 	if err != nil {
@@ -31,7 +36,7 @@ func UseCaseMysqlUserRepository() {
 	fmt.Println("Successfully connected to MySQL!")
 
 	// Initialize repository
-	userRepo := repository.NewMySQLUserRepository(db)
+	userRepo := repository.NewMySQLUserRepository(db, "tag parameter")
 
 	// Use a base context for the example
 	ctx := context.Background()
