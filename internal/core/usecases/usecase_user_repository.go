@@ -15,7 +15,7 @@ import (
 func UseCaseMysqlUserRepository() {
 
 	logger := thelogger.NewTheLogger()
-	logger.Info("Hello World")
+	logger.Info("Hello UseCaseMysqlUserRepository")
 
 	dsn := "root:toor@tcp(127.0.0.1:3306)/database_name?parseTime=true"
 	db, err := sql.Open("mysql", dsn)
