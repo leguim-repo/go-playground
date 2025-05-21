@@ -1,7 +1,7 @@
 package main
 
 import (
-	"go-playground/internal/websockets/bitcoin"
+	"go-playground/internal/justforfun/websockets/bitcoin"
 )
 
 func main() {

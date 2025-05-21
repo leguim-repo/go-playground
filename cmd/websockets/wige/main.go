@@ -1,7 +1,7 @@
 package main
 
 import (
-	"go-playground/internal/websockets/wigeracedata"
+	"go-playground/internal/justforfun/websockets/wigeracedata"
 )
 
 func main() {

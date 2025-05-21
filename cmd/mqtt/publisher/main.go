@@ -1,7 +1,7 @@
 package main
 
 import (
-	"go-playground/internal/mqtt/publisher"
+	"go-playground/internal/justforfun/mqtt/publisher"
 )
 
 func main() {

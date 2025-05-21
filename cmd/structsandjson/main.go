@@ -1,7 +1,7 @@
 package main
 
 import (
-	"go-playground/internal/structsandjson"
+	"go-playground/internal/justforfun/structsandjson"
 )
 
 func main() {

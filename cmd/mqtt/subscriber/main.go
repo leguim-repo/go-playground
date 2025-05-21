@@ -1,7 +1,7 @@
 package main
 
 import (
-	"go-playground/internal/mqtt/subscriber"
+	"go-playground/internal/justforfun/mqtt/subscriber"
 )
 
 func main() {
