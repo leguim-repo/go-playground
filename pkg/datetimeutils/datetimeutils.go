@@ -48,7 +48,7 @@ func Now() time.Time {
 	return time.Now().UTC()
 }
 
-// CreateTimeStamp formats a given time.Time object into a string
+// CreateFileTimeStamp CreateTimeStamp formats a given time.Time object into a string
 // using the specified format layout and timezone (Europe/Berlin).
 func CreateFileTimeStamp(fileCreationDate time.Time) (FileTimeStamp, error) {
 	// Load the Europe/Berlin timezone location
