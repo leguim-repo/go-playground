@@ -1,13 +1,7 @@
 # Go Playground
 
-For the moment, just a go playground
-
-
-
-go mod init go-playground
-go get github.com/gorilla/websocket
-
+For the moment, just a go playground.
+In fact this README.md is under construction
 
 
 https://www.youtube.com/watch?v=zL19uMsnpSU
-
