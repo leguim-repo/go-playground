@@ -8,6 +8,7 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strconv"
 )
 
 const (
@@ -26,14 +27,52 @@ const (
 
 type leaderBoardInitMessage struct {
 	EventId         string `json:"eventId"`
-	EventPid        string `json:"eventPid"`
+	EventPid        []int  `json:"eventPid"`
 	ClientLocalTime string `json:"clientLocalTime"`
+}
+
+var globalMessageCounter int
+
+func incrementGlobalMessageCounter() {
+	globalMessageCounter++
+}
+
+func getCurrentDirectory() string {
+	currentDirectory, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	log.Printf("Current directory: %s", currentDirectory)
+	return currentDirectory
+}
+
+func saveData(messageWS string) {
+	/*
+		jsonData, err := json.Marshal(messageWS)
+		if err != nil {
+			log.Printf("Error convert message to JSON: %s", err)
+			return
+		}
+	*/
+
+	jsonData := []byte(messageWS)
+	incrementGlobalMessageCounter()
+	currentTimeUTC := datetimeutils.Now()
+	formattedTimeStamp, err := datetimeutils.CreateFileTimeStamp(currentTimeUTC)
+	fileName := getCurrentDirectory() + "/datalake/QUALY24HN_SUNDAY_" + strconv.Itoa(globalMessageCounter) + "_" + string(formattedTimeStamp) + ".json"
+
+	err = os.WriteFile(fileName, jsonData, 0644)
+	if err != nil {
+		log.Printf("Error writing file: %s", err)
+		return
+	}
+	log.Printf("Data saved: %s", fileName)
 }
 
 func WigeRaceData() {
 	raceDataInitMessage := leaderBoardInitMessage{
-		EventId:         vln,
-		EventPid:        "[0, 4]",
+		EventId:         the24HNurbugring,
+		EventPid:        []int{0, 4},
 		ClientLocalTime: datetimeutils.GetUnixTimestampWithMilliseconds(),
 	}
 
@@ -76,13 +115,14 @@ func WigeRaceData() {
 		defer close(done)
 		// Loop for read messages
 		for {
-			messageType, message, err := conn.ReadMessage()
+			_, message, err := conn.ReadMessage()
 			// Handle received messages and read errors
 			if err != nil {
 				log.Printf("Error while receiving message: %v", err)
 				return
 			}
-			log.Printf("Message received (type %d): %s", messageType, string(message))
+			//log.Printf("Message received (type %d): %s", messageType, string(message))
+			saveData(string(message))
 		}
 	}()
 
