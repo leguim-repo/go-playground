@@ -3,11 +3,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"github.com/twmb/franz-go/pkg/kadm"
 	"strconv"
+	"strings"
 	"sync"
 	"time"
 
-	"github.com/twmb/franz-go/pkg/kadm"
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
@@ -23,10 +24,19 @@ func main() {
 	defer client.Close()
 
 	topic := "foobar"
+	// Create a RedPanda topic
 	_, err = kadm.NewClient(client).CreateTopic(context.Background(), 1, -1, nil, topic)
 	if err != nil {
-		//panic(err)
+		//panic(err) // if topic exist trigger panic error
 		fmt.Println(err)
+	}
+
+	// Getting list of topics. Topics with prefix _ are internal
+	currentTopics, err := kadm.NewClient(client).ListTopics(context.Background())
+	for _, currentTopic := range currentTopics {
+		if !strings.HasPrefix(currentTopic.Topic, "_") {
+			fmt.Println("currentTopic: ", currentTopic.Topic)
+		}
 	}
 
 	count := 5
