@@ -12,6 +12,22 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
+func GetTopics(client *kgo.Client) []string {
+	var topicsFound []string
+	currentTopics, err := kadm.NewClient(client).ListTopics(context.Background())
+	if err != nil {
+		panic(err)
+	}
+
+	for _, currentTopic := range currentTopics {
+		if !strings.HasPrefix(currentTopic.Topic, "_") {
+			fmt.Println("currentTopic: ", currentTopic.Topic)
+			topicsFound = append(topicsFound, currentTopic.Topic)
+		}
+	}
+	return topicsFound
+}
+
 func main() {
 	ctx := context.Background()
 
@@ -32,10 +48,11 @@ func main() {
 	}
 
 	// Getting list of topics. Topics with prefix _ are internal
-	currentTopics, err := kadm.NewClient(client).ListTopics(context.Background())
-	for _, currentTopic := range currentTopics {
-		if !strings.HasPrefix(currentTopic.Topic, "_") {
-			fmt.Println("currentTopic: ", currentTopic.Topic)
+	topicsFound := GetTopics(client)
+	fmt.Println("List of topics found:", topicsFound)
+	for _, topic := range topicsFound {
+		if !strings.HasPrefix(topic, "_") {
+			fmt.Println("topic: ", topic)
 		}
 	}
 
