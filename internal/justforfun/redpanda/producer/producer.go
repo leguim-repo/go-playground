@@ -1,4 +1,4 @@
-package main
+package producer
 
 import (
 	"context"
@@ -38,7 +38,7 @@ func CreateTopic(client *kgo.Client, topic string) error {
 	return nil
 }
 
-func main() {
+func PlaygroundRedPandaProducer() {
 	logger := thelogger.NewTheLogger()
 	ctx := context.Background()
 
