@@ -6,4 +6,6 @@
 /TheDocker/mosquitto/log/
 /TheDocker/mosquitto/data/
 /build/
+/build-linux/
+/build-rpi/
 /datalake/
