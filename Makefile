@@ -6,6 +6,8 @@ PWD = $(shell pwd)
 BUILD_FOLDER=build
 BUILD_FOLDER_LINUX=build-linux
 BUILD_FOLDER_RPI=build-rpi
+BUILD_FOLDER_MACOS_INTEL=build-macos-intel
+BUILD_FOLDER_MACOS_SILICON=build-macos-silicon
 
 .PHONY: help
 help: ## Prints all targets available and their description
@@ -29,6 +31,9 @@ define build-target
 		fi \
 	done
 	@echo "All commands built successfully for $(1)."
+	@echo "Build folder: $(2)"
+	@echo ""
+
 endef
 
 
@@ -47,10 +52,25 @@ build-rpi: ## Target to build all commands in cmd/*/* for rpi
 	$(call build-target,rpi,${BUILD_FOLDER_RPI},GOOS=linux GOARCH=arm)
 
 
+.PHONY:	build-macos-intel
+build-macos-intel: ## Target to build all commands in cmd/*/* for macos intel
+	$(call build-target,macos-intel,${BUILD_FOLDER_MACOS_INTEL},GOOS=darwin GOARCH=amd64)
+
+
+.PHONY:	build-macos-silicon
+build-macos-silicon: ## Target to build all commands in cmd/*/* for macos apple silicon
+	$(call build-target,macos-silicon,${BUILD_FOLDER_MACOS_SILICON},GOOS=darwin GOARCH=arm64)
+
+
+.PHONY: build-all-arch
+build-all-arch: build build-linux build-macos-intel build-macos-silicon build-rpi ## Target to build all architectures
+
 .PHONY: clean
 clean: ## Target to clean up built binaries
 	@echo "Cleaning up binaries..."
 	@rm -rf ${BUILD_FOLDER}
 	@rm -rf ${BUILD_FOLDER_LINUX}
 	@rm -rf ${BUILD_FOLDER_RPI}
+	@rm -rf ${BUILD_FOLDER_MACOS_INTEL}
+	@rm -rf ${BUILD_FOLDER_MACOS_SILICON}
 	@echo "Build directory removed."

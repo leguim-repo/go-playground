@@ -9,3 +9,5 @@
 /build-linux/
 /build-rpi/
 /datalake/
+/build-macos-silicon/
+/build-macos-intel/
