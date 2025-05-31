@@ -22,7 +22,13 @@ var (
 // MiHookCombinado implementa BrokerConnectHook y hooks de producción.
 type MiHookCombinado struct{}
 
-// ---- Implementación de kgo.BrokerConnectHook ----
+// Verify in compilation time if my hooks are implemented correctly
+// https://pkg.go.dev/github.com/twmb/franz-go/pkg/kgo@v1.19.4#HookBrokerConnect
+var _ kgo.HookBrokerConnect = (*MiHookCombinado)(nil)
+var _ kgo.HookBrokerDisconnect = (*MiHookCombinado)(nil)
+var _ kgo.HookBrokerWrite = (*MiHookCombinado)(nil)
+
+// ---- Implementación de kgo.HookBrokerConnect ----
 
 // OnBrokerConnect es llamado cuando el cliente se conecta a un broker.
 func (h *MiHookCombinado) OnBrokerConnect(meta kgo.BrokerMetadata, initDur time.Duration, conn net.Conn, err error) {
