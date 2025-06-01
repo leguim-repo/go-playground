@@ -60,7 +60,7 @@ func PlaygroundRedPandaProducer() {
 			logger.Warn(err.Error())
 		}
 	}
-	// Getting list of topics. Topics with prefix _ are internal
+	// Getting a list of topics. Topics with the prefix _ are internal
 	topicsFound, err := GetTopics(client)
 
 	message := fmt.Sprintf("List of topics found: %s", strings.Join(topicsFound, ", "))
@@ -71,7 +71,7 @@ func PlaygroundRedPandaProducer() {
 	wg.Add(count)
 	topic := "foobar"
 	ctx, cancel := context.WithTimeout(ctx, 2*time.Second)
-	//ctx, cancel := context.WithDeadline(context.Background(), time.Now().Add(2*time.Second))
+	//ctx, cancel:= context.WithDeadline(context.Background(), time.Now().Add(2*time.Second))
 	defer cancel()
 	for i := range count {
 		theMessage := `{"test":"foo","count":` + strconv.Itoa(i) + `,"datetime":"` + time.DateTime + `"}`
