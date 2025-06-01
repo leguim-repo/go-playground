@@ -7,7 +7,7 @@ import (
 	"go-playground/pkg/thelogger"
 	"net"
 	_ "net/http/pprof"
-	"os"
+	"strconv"
 	"strings"
 	"time"
 
@@ -33,36 +33,39 @@ var _ kgo.HookBrokerWrite = (*BrokerHooks)(nil)
 
 // OnBrokerConnect is called after a connection to a broker is opened.
 func (h *BrokerHooks) OnBrokerConnect(meta kgo.BrokerMetadata, initDur time.Duration, conn net.Conn, err error) {
+	h.logger.Info("HOOK: OnBrokerConnect called")
+
 	if err != nil {
-		fmt.Printf("HOOK (OnConnect): Error connect to broker host: %s (ID: %d): error: %v (initDur: %s)\n", meta.Host, meta.NodeID, err, initDur)
+		h.logger.Info("HOOK (OnConnect): Error connect to broker host: " + meta.Host + " (ID: " + strconv.FormatInt(int64(meta.NodeID), 10) + "): error: " + err.Error() + " (initDur: " + initDur.String() + ")")
 		return
 	}
 	if conn != nil {
-		fmt.Printf("HOOK (OnConnect): Connected to broker host: %s (ID: %d) initDur: %s LocalAddr: %s RemoteAddr: %s\n",
-			meta.Host, meta.NodeID, initDur, conn.LocalAddr(), conn.RemoteAddr())
+		h.logger.Info("HOOK (OnConnect): Connected to broker host: " + meta.Host + " (ID: " + strconv.FormatInt(int64(meta.NodeID), 10) + ") initDur: " + initDur.String() + " LocalAddr: " + conn.LocalAddr().String() + " RemoteAddr: " + conn.RemoteAddr().String())
 	} else {
-		// This could happen if the hook is called with an error before the connection is established.
-		fmt.Printf("HOOK (OnConnect): Broker connection attempt %s (ID: %d) finished (duration: %s), connection is nil).\n", meta.Host, meta.NodeID, initDur)
+		// // This case (err == nil and conn == nil) is unexpected based on typical franz-go behavior, logging as a warning.
+		h.logger.Warn("HOOK (OnConnect): Broker connection attempt " + meta.Host + " (ID: " + strconv.FormatInt(int64(meta.NodeID), 10) + ") finished (duration: " + initDur.String() + "), connection is nil).")
 	}
 }
 
 // OnBrokerDisconnect is called when a connection to a broker is closed.
 func (h *BrokerHooks) OnBrokerDisconnect(meta kgo.BrokerMetadata, conn net.Conn) {
 	h.logger.Info("HOOK: OnDisconnect called")
+
 	if conn != nil {
-		fmt.Printf("HOOK (OnDisconnect): Disconnected from broker %s (ID: %d). LocalAddr: %s, RemoteAddr: %s\n",
-			meta.Host, meta.NodeID, conn.LocalAddr(), conn.RemoteAddr())
+		h.logger.Info("HOOK (OnDisconnect): Disconnected from broker " + meta.Host + " (ID: " + strconv.FormatInt(int64(meta.NodeID), 10) + "). LocalAddr: " + conn.LocalAddr().String() + ", RemoteAddr: " + conn.RemoteAddr().String())
 	} else {
-		fmt.Printf("HOOK (OnDisconnect): Disconnected from broker %s (ID: %d) (conn = nil)\n", meta.Host, meta.NodeID)
+		h.logger.Warn("HOOK (OnDisconnect): Disconnected from broker " + meta.Host + " (ID: " + strconv.FormatInt(int64(meta.NodeID), 10) + ") (conn = nil)")
 	}
 }
 
 // OnBrokerWrite is called after write to a broker.
 func (h *BrokerHooks) OnBrokerWrite(meta kgo.BrokerMetadata, key int16, bytesWritten int, writeWait, timeToWrite time.Duration, err error) {
+	h.logger.Info("HOOK: OnBrokerWrite called")
+
 	if err != nil {
-		fmt.Printf("HOOK (OnBrokerWrite): Error when writing in broker %s (ID: %d), key %d: err: %v (writeWait: %s, timeToWrite: %s)\n", meta.Host, meta.NodeID, key, err, writeWait, timeToWrite)
+		h.logger.Error("HOOK (OnBrokerWrite): Error when writing in broker " + meta.Host + " (ID: " + strconv.FormatInt(int64(meta.NodeID), 10) + "), key " + strconv.FormatInt(int64(key), 10) + ": err: " + err.Error() + " (writeWait: " + strconv.Itoa(int(writeWait)) + ", timeToWrite: " + strconv.Itoa(int(timeToWrite)) + ")")
 	} else {
-		fmt.Printf("HOOK (OnBrokerWrite): Successful writing in broker %s (ID: %d), key %d. Bytes: %d (writeWait: %s, timeToWrite: %s)\n", meta.Host, meta.NodeID, key, bytesWritten, writeWait, timeToWrite)
+		h.logger.Info("HOOK (OnBrokerWrite): Successful writing in broker " + meta.Host + " (ID: " + strconv.FormatInt(int64(meta.NodeID), 10) + "), key " + strconv.FormatInt(int64(key), 10) + ". Bytes: " + strconv.Itoa(bytesWritten) + " (writeWait: " + strconv.Itoa(int(writeWait)) + ", timeToWrite: " + strconv.Itoa(int(timeToWrite)) + ")")
 	}
 }
 
@@ -76,12 +79,13 @@ func PlaygroundRedPandaProducerHook() {
 
 	opts := []kgo.Opt{
 		kgo.SeedBrokers(strings.Split(*seedBrokers, ",")...),
-		kgo.WithHooks(hooks), // Aquí se registran los hooks
+		kgo.WithHooks(hooks),
 		kgo.DefaultProduceTopic(*topic),
 		kgo.AllowAutoTopicCreation(),
-		kgo.WithLogger(kgo.BasicLogger(os.Stderr, kgo.LogLevelInfo, func() string {
-			return time.Now().Format("[2006-01-02 15:04:05.999] ")
-		})),
+		// Client logger (kgo.BasicLogger) is commented out; hooks use their own custom logger.
+		//kgo.WithLogger(kgo.BasicLogger(os.Stderr, kgo.LogLevelInfo, func() string {
+		//	return time.Now().Format("[2006-01-02 15:04:05.999] ")
+		//})),
 	}
 	if !*produce {
 		opts = append(opts, kgo.ConsumeTopics(*topic))
