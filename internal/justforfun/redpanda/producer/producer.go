@@ -23,7 +23,6 @@ func GetTopics(client *kgo.Client) ([]string, error) {
 
 	for _, currentTopic := range currentTopics {
 		if !strings.HasPrefix(currentTopic.Topic, "_") {
-			fmt.Println("currentTopic: ", currentTopic.Topic)
 			topicsFound = append(topicsFound, currentTopic.Topic)
 		}
 	}
@@ -40,6 +39,8 @@ func CreateTopic(client *kgo.Client, topic string) error {
 
 func PlaygroundRedPandaProducer() {
 	logger := thelogger.NewTheLogger()
+	logger.Info("Starting RedPanda basic example producer")
+
 	ctx := context.Background()
 
 	seeds := []string{"localhost:19092"}
@@ -61,12 +62,9 @@ func PlaygroundRedPandaProducer() {
 	}
 	// Getting list of topics. Topics with prefix _ are internal
 	topicsFound, err := GetTopics(client)
-	fmt.Println("List of topics found:", topicsFound)
-	for _, topic := range topicsFound {
-		if !strings.HasPrefix(topic, "_") {
-			fmt.Println("topic: ", topic)
-		}
-	}
+
+	message := fmt.Sprintf("List of topics found: %s", strings.Join(topicsFound, ", "))
+	logger.Info(message)
 
 	count := 5
 	wg := sync.WaitGroup{}

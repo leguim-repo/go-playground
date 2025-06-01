@@ -70,8 +70,8 @@ func (h *BrokerHooks) OnBrokerWrite(meta kgo.BrokerMetadata, key int16, bytesWri
 }
 
 func PlaygroundRedPandaProducerHook() {
-	flag.Parse()
 	logger := thelogger.NewTheLogger()
+	logger.Info("Starting RedPanda example with hooks and async producer")
 
 	hooks := &BrokerHooks{
 		logger: logger,
