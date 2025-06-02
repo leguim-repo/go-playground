@@ -26,8 +26,6 @@ func PlaygroundInfluxDbWriter() {
 	url := "http://localhost:8086"
 	client := influxdb2.NewClient(url, token)
 
-	rand.Seed(time.Now().UnixNano())
-
 	org := "docs"
 	bucket := "go-playground"
 	writeAPI := client.WriteAPIBlocking(org, bucket)
@@ -47,7 +45,7 @@ func PlaygroundInfluxDbWriter() {
 		fmt.Printf("fields: %v\n", fields)
 
 		point := write.NewPoint("measurement1", tags, fields, time.Now())
-		time.Sleep(100 * time.Millisecond) // separate points by 1 second
+		time.Sleep(100 * time.Millisecond)
 
 		if err := writeAPI.WritePoint(context.Background(), point); err != nil {
 			log.Fatal(err)
