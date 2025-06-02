@@ -1,6 +1,7 @@
 .DS_Store
 .idea/
 .env
+.env*
 
 
 /TheDocker/mosquitto/log/
@@ -11,3 +12,4 @@
 /datalake/
 /build-macos-silicon/
 /build-macos-intel/
+/TheDocker/.env*
