@@ -3,14 +3,14 @@ package gearbox
 import "math"
 
 type Gearbox struct {
-	CurrentGear    int
-	MaxGears       int
-	GearRatios     []float64
-	FinalDrive     float64
+	currentGear    int
+	maxGears       int
+	gearRatios     []float64
+	finalDrive     float64
 	ClutchPosition float64 // 0.0 = clutch disengaged, 1.0 = clutch engaged
 
 	InputShaft  float64
-	OutputShaft float64
+	outputShaft float64
 
 	wheelRPM    float64
 	wheelTorque float64
@@ -18,11 +18,11 @@ type Gearbox struct {
 
 func NewGearbox() *Gearbox {
 	return &Gearbox{
-		CurrentGear:    0, // 0 = neutral
+		currentGear:    0, // 0 = neutral
 		ClutchPosition: 0.0,
-		MaxGears:       6,
+		maxGears:       6,
 		// Gear ratios
-		GearRatios: []float64{
+		gearRatios: []float64{
 			0.0,   // Neutral
 			3.827, // 1
 			2.359, // 2
@@ -31,7 +31,7 @@ func NewGearbox() *Gearbox {
 			1.000, // 5
 			0.831, // 6
 		},
-		FinalDrive: 3.42, // Final differential ratio
+		finalDrive: 3.42, // Final differential ratio
 	}
 }
 
@@ -40,70 +40,70 @@ func (g *Gearbox) SetClutch(position float64) {
 }
 
 func (g *Gearbox) ShiftUp() bool {
-	if g.CurrentGear < g.MaxGears {
-		g.CurrentGear++
+	if g.currentGear < g.maxGears {
+		g.currentGear++
 		return true
 	}
 	return false
 }
 
 func (g *Gearbox) ShiftDown() bool {
-	if g.CurrentGear > 0 {
-		g.CurrentGear--
+	if g.currentGear > 0 {
+		g.currentGear--
 		return true
 	}
 	return false
 }
 
 func (g *Gearbox) GetCurrentRatio() float64 {
-	return g.GearRatios[g.CurrentGear] * g.FinalDrive
+	return g.gearRatios[g.currentGear] * g.finalDrive
 }
 
-// SetOutputShaft Calculates output shaft RPM based on input shaft RPM
-func (g *Gearbox) SetOutputShaft(rpm float64) float64 {
-	if g.CurrentGear == 0 {
+// setOutputShaft Calculates output shaft RPM based on input shaft RPM
+func (g *Gearbox) setOutputShaft(rpm float64) float64 {
+	if g.currentGear == 0 {
 		return 0
 	}
-	return rpm / (g.GearRatios[g.CurrentGear] * g.FinalDrive)
-}
-
-// GetWheelTorque Calculate the torque at the wheels
-func (g *Gearbox) GetWheelTorque(engineTorque float64) float64 {
-	efficiency := 0.92 // Transmission efficiency
-	return engineTorque * g.GetCurrentRatio() * efficiency * g.ClutchPosition
+	return rpm / (g.gearRatios[g.currentGear] * g.finalDrive)
 }
 
 func (g *Gearbox) Update(deltaTime float64) {
-	// The InputShaft is now updated from the engine
+	// The InputShaft is now updated from the engine. Check TODO of engine
 
 	// Calculate output RPM based on current gear ratio
-	g.OutputShaft = g.SetOutputShaft(g.InputShaft)
+	g.outputShaft = g.setOutputShaft(g.InputShaft)
 
 	// Calculate the torque at the wheels
 	if g.ClutchPosition > 0 {
 		g.wheelTorque = g.GetWheelTorque(g.InputShaft)
-		g.wheelRPM = g.OutputShaft
+		g.wheelRPM = g.outputShaft
 	} else {
 		g.wheelTorque = 0
 		g.wheelRPM = 0
 	}
 }
 
+func (g *Gearbox) SetGear(targetGear int) bool {
+	if targetGear >= 0 && targetGear <= g.maxGears {
+		g.currentGear = targetGear
+		return true
+	}
+	return false
+}
+
 func (g *Gearbox) GetGearboxData() Telemetry {
 	return Telemetry{
 		ClutchPosition: g.ClutchPosition,
 		InputShaft:     g.InputShaft,
-		CurrentGear:    g.CurrentGear,
-		OutputShaft:    g.OutputShaft,
+		CurrentGear:    g.currentGear,
+		OutputShaft:    g.outputShaft,
 		WheelRPM:       g.wheelRPM,
 		WheelTorque:    g.wheelTorque,
 	}
 }
 
-func (g *Gearbox) ShiftGear(gear int) bool {
-	if gear >= 0 && gear <= g.MaxGears {
-		g.CurrentGear = gear
-		return true
-	}
-	return false
+// GetWheelTorque Calculate the torque at the wheels
+func (g *Gearbox) GetWheelTorque(engineTorque float64) float64 {
+	efficiency := 0.92 // Transmission efficiency
+	return engineTorque * g.GetCurrentRatio() * efficiency * g.ClutchPosition
 }

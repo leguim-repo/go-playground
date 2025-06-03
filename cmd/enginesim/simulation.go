@@ -41,7 +41,7 @@ func EngineSimulation() {
 	// Accelerator pedal simulation
 	go func() {
 		<-ready // Wait for the start signal
-		simulateAccelerator(theEngine)
+		simulateEngine(theEngine)
 	}()
 
 	// Gear shift simulation
@@ -75,7 +75,7 @@ func EngineSimulation() {
 
 func initializeEngineState(motor *engine.Engine) {
 	// Initial state of the engine
-	motor.SetAccelerator(0.0) // Accelerator depressed
+	motor.SetAcceleratorPos(0.0) // Accelerator depressed
 
 	// Wait for the engine to idle
 	fmt.Println("Initializing engine at idle...")
@@ -89,28 +89,28 @@ func initializeEngineState(motor *engine.Engine) {
 func initializeGearboxState(gearbox *gearbox.Gearbox) {
 	// Initial state of the gearbox
 	gearbox.SetClutch(0.0) // Clutch pressed
-	gearbox.ShiftGear(0)   // Neutral
+	gearbox.SetGear(0)     // Neutral
 
 	// Wait for the engine to idle
 	fmt.Println("Initializing gearbox...")
 	time.Sleep(2 * time.Second)
 
 	// Prepare first gear
-	gearbox.ShiftGear(1)   // First gear
+	gearbox.SetGear(1)     // Engage first gear
 	gearbox.SetClutch(1.0) // Release clutch gradually
 
 	fmt.Printf("- First gear engaged\n")
 	fmt.Printf("- Clutch ready\n")
 }
 
-func simulateAccelerator(motor *engine.Engine) {
+func simulateEngine(motor *engine.Engine) {
 	// Short initial pause for stabilization
 	time.Sleep(1 * time.Second)
 
 	for {
 		// Smoother gradual acceleration
 		for pos := 0.0; pos <= 1.0; pos += 0.05 {
-			motor.SetAccelerator(pos)
+			motor.SetAcceleratorPos(pos)
 			time.Sleep(500 * time.Millisecond)
 		}
 		// Hold full throttle briefly
@@ -118,7 +118,7 @@ func simulateAccelerator(motor *engine.Engine) {
 
 		// Gradual deceleration
 		for pos := 1.0; pos >= 0.0; pos -= 0.05 {
-			motor.SetAccelerator(pos)
+			motor.SetAcceleratorPos(pos)
 			time.Sleep(500 * time.Millisecond)
 		}
 		// Idle pause
@@ -135,29 +135,29 @@ func simulateGearShifts(motor *engine.Engine, gearbox *gearbox.Gearbox) {
 		gearData := gearbox.GetGearboxData()
 
 		switch {
-		case engineData.RPM > 4000 && gearData.CurrentGear < 6:
-			performGearShift(motor, gearbox, gearData.CurrentGear+1)
+		case engineData.RPM > 8000 && gearData.CurrentGear < 6:
+			performGearShift(motor, gearbox, gearbox.ShiftUp)
 
 		case engineData.RPM < 2000 && gearData.CurrentGear > 1:
-			performGearShift(motor, gearbox, gearData.CurrentGear-1)
+			performGearShift(motor, gearbox, gearbox.ShiftDown)
 		}
 
 		time.Sleep(500 * time.Millisecond)
 	}
 }
 
-func performGearShift(motor *engine.Engine, gearbox *gearbox.Gearbox, targetGear int) {
+func performGearShift(motor *engine.Engine, gearbox *gearbox.Gearbox, shiftGear func() bool) {
 	// Save the current throttle position
 	currentAccel := motor.GetData().AcceleratorPosition
 
 	// Gear shift sequence
-	motor.SetAccelerator(0.3) // Reduce acceleration
+	motor.SetAcceleratorPos(0.3) // Reduce acceleration
 	time.Sleep(100 * time.Millisecond)
 
 	gearbox.SetClutch(0.0) // Press clutch
 	time.Sleep(200 * time.Millisecond)
 
-	gearbox.ShiftGear(targetGear) // Change gear
+	shiftGear() // Change gear
 	time.Sleep(200 * time.Millisecond)
 
 	// Release clutch gradually
@@ -167,7 +167,7 @@ func performGearShift(motor *engine.Engine, gearbox *gearbox.Gearbox, targetGear
 	}
 
 	// Restore throttle gradually
-	motor.SetAccelerator(currentAccel)
+	motor.SetAcceleratorPos(currentAccel)
 }
 
 func createEnginePoint(engineData engine.Telemetry) *write.Point {
@@ -217,13 +217,13 @@ func writePoints(writeAPI api.WriteAPIBlocking, points ...*write.Point) error {
 }
 
 func printSimulationStatus(engineData engine.Telemetry, gearboxData gearbox.Telemetry) {
-	fmt.Printf("Engine: RPM=%.0f, Torque=%.1f Nm, Gear=%d, Clutch=%.1f%%\n",
+	fmt.Printf("Engine: RPM=%.0f, torque=%.1f Nm, Gear=%d, Clutch=%.1f%%\n",
 		engineData.RPM,
 		engineData.Torque,
 		gearboxData.CurrentGear,
 		gearboxData.ClutchPosition*100)
 
-	fmt.Printf("Gearbox: InputShaft: %.0f, Gear=%d, OutputShaft: %.0f, Clutch=%.1f%%, Wheels=%.0f RPM, Torque=%.1f Nm\n",
+	fmt.Printf("Gearbox: InputShaft: %.0f, Gear=%d, outputShaft: %.0f, Clutch=%.1f%%, Wheels=%.0f RPM, torque=%.1f Nm\n",
 		gearboxData.InputShaft,
 		gearboxData.CurrentGear,
 		gearboxData.OutputShaft,
@@ -231,7 +231,7 @@ func printSimulationStatus(engineData engine.Telemetry, gearboxData gearbox.Tele
 		gearboxData.WheelRPM,
 		gearboxData.WheelTorque)
 
-	fmt.Printf("Wheels: RPM=%.0f, Torque=%.1f Nm\n",
+	fmt.Printf("Wheels: RPM=%.0f, torque=%.1f Nm\n",
 		gearboxData.WheelRPM,
 		gearboxData.WheelTorque)
 }

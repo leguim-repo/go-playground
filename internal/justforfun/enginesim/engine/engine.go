@@ -9,7 +9,7 @@ import (
 type Engine struct {
 	// Engine state
 	Rpm             float64
-	Torque          float64
+	torque          float64
 	oilTemp         float64
 	acceleratorPos  float64 // 0.0 to 1.0 (0% to 100%)
 	fuelConsumption float64
@@ -25,8 +25,8 @@ type Engine struct {
 	// Engine dynamics
 	inertia float64 // How quickly the Engine responds
 
-	// Torque curve parameters
-	rpmMaxTorque float64 // RPM where maximum Torque is reached
+	// torque curve parameters
+	rpmMaxTorque float64 // RPM where maximum torque is reached
 	rpmMaxPower  float64 // RPM where maximum power is reached
 
 	Gearbox *gearbox.Gearbox
@@ -37,7 +37,7 @@ func NewEngine(theGearbox *gearbox.Gearbox) *Engine {
 	return &Engine{
 		Gearbox:        theGearbox,
 		Rpm:            800, // Low Idle
-		Torque:         0,
+		torque:         0,
 		oilTemp:        80, // Initial oil temperature
 		acceleratorPos: 0,
 		MaxRPM:         8500, // Max RPM
@@ -45,7 +45,7 @@ func NewEngine(theGearbox *gearbox.Gearbox) *Engine {
 		maxTemp:        120,  // Max oil temperature
 		minTemp:        70,   // Min oil temperature in normal conditions
 		inertia:        0.3,  // Inertia Engine factor (0-1)
-		rpmMaxTorque:   3500, // Typical RPM for maximum Torque
+		rpmMaxTorque:   3500, // Typical RPM for maximum torque
 		rpmMaxPower:    5500, // Typical RPM for maximum power
 	}
 }
@@ -54,7 +54,7 @@ func randomInRange(min, max float64) float64 {
 	return rand.Float64()*(max-min) + min
 }
 
-func (m *Engine) SetAccelerator(position float64) {
+func (m *Engine) SetAcceleratorPos(position float64) {
 	// Ensure a valid position between 0 and 1
 	m.acceleratorPos = math.Max(0, math.Min(1, position))
 }
@@ -71,8 +71,9 @@ func (m *Engine) Update(deltaTime float64) {
 	m.Rpm -= rpmDrop
 
 	m.UpdateTorque()
-	m.updateTemp(deltaTime)
+	m.updateOilTemp(deltaTime)
 
+	// TODO: Improve coupling between engine and gearbox. This way is the best way? Maybe a better way is to have a channels between the engine goroutine and the gearbox goroutine.
 	// Coupling engine with the gearbox. The rpm engine is the gearbox input shaft
 	m.Gearbox.InputShaft = m.Rpm
 	// Update gearbox
@@ -93,7 +94,7 @@ func (m *Engine) updateRPM(deltaTime float64) {
 	m.Rpm = math.Max(800, math.Min(m.MaxRPM, m.Rpm))
 }
 
-func (m *Engine) RealisticTorqueCurve(rpm float64) float64 {
+func (m *Engine) realisticTorqueCurve(rpm float64) float64 {
 	// Normalize RPM to the 0-1 range
 	rpmNorm := rpm / m.MaxRPM
 
@@ -114,29 +115,29 @@ func (m *Engine) RealisticTorqueCurve(rpm float64) float64 {
 	// Add a drop to high RPM
 	highDrop := math.Exp(-math.Pow((rpmNorm-powerMaxRPM)*1.5, 2))
 
-	// Reduce Torque at idle
+	// Reduce torque at idle
 	idleFactor := 1 - math.Exp(-5*rpmNorm)
 
 	// Combine all the factors
 	torqueFactor := baseCurve * idleFactor * (0.7 + 0.3*highDrop)
 
-	// Multiply by the maximum Torque and the throttle position
+	// Multiply by the maximum torque and the throttle position
 	return torqueFactor * m.maxTorque * m.acceleratorPos
 }
 
 func (m *Engine) UpdateTorque() {
-	m.Torque = m.RealisticTorqueCurve(m.Rpm)
+	m.torque = m.realisticTorqueCurve(m.Rpm)
 
-	// Add a small random variation (1-2% of current Torque)
-	smallRandomTorqueVariation := m.Torque * randomInRange(-0.02, 0.02)
-	m.Torque += smallRandomTorqueVariation
+	// Add a small random variation (1-2% of current torque)
+	smallRandomTorqueVariation := m.torque * randomInRange(-0.02, 0.02)
+	m.torque += smallRandomTorqueVariation
 
 	// Make sure it is not negative
-	m.Torque = math.Max(0, m.Torque)
+	m.torque = math.Max(0, m.torque)
 
 }
 
-func (m *Engine) updateTemp(deltaTime float64) {
+func (m *Engine) updateOilTemp(deltaTime float64) {
 	// Temperature increases with RPM and load
 	tempTarget := m.minTemp +
 		(m.maxTemp-m.minTemp)*(0.3*m.Rpm/m.MaxRPM+0.7*m.acceleratorPos)
@@ -153,12 +154,12 @@ func (m *Engine) updateTemp(deltaTime float64) {
 
 // GetData Function to collect data from the Engine
 func (m *Engine) GetData() Telemetry {
-	powerKW := (m.Torque * m.Rpm) / 9549.297
+	powerKW := (m.torque * m.Rpm) / 9549.297
 	powerHP := powerKW * 1.341
 
 	return Telemetry{
 		RPM:                 m.Rpm,
-		Torque:              m.Torque,
+		Torque:              m.torque,
 		OilTemp:             m.oilTemp,
 		AcceleratorPosition: m.acceleratorPos,
 		PowerKW:             powerKW,

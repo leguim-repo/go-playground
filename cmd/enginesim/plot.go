@@ -28,7 +28,7 @@ func PlotEngineTorqueCurve() {
 	motor := engine.NewEngine(gearbox.NewGearbox())
 
 	for _, position := range acceleratorPositions {
-		motor.SetAccelerator(position)
+		motor.SetAcceleratorPos(position)
 
 		// Generate points throughout the RPM range
 		for rpm := 800.0; rpm <= motor.MaxRPM; rpm += 100 {
