@@ -1,6 +1,7 @@
 package engine
 
 import (
+	"go-playground/internal/justforfun/enginesim/gearbox"
 	"math"
 	"math/rand"
 )
@@ -28,10 +29,16 @@ type Engine struct {
 	rpmMaxTorque float64 // RPM where maximum Torque is reached
 	rpmMaxPower  float64 // RPM where maximum power is reached
 
+	Gearbox *gearbox.Gearbox
+
+	wheelRPM    float64
+	wheelTorque float64
 }
 
 func NewEngine() *Engine {
+
 	return &Engine{
+		Gearbox:        gearbox.NewGearbox(),
 		Rpm:            800, // Low Idle
 		Torque:         0,
 		oilTemp:        80, // Initial oil temperature
@@ -56,9 +63,23 @@ func (m *Engine) SetAccelerator(position float64) {
 }
 
 func (m *Engine) Update(deltaTime float64) {
+
+	// Update RPM considering the clutch
+	clutchSlip := 1.0 - m.Gearbox.ClutchPosition
+
+	// If the clutch is pressed (clutch disengaged), the engine spins more freely.
+	rpmDrop := m.Rpm * clutchSlip * 0.1
+
 	m.updateRPM(deltaTime)
+	m.Rpm -= rpmDrop
+
 	m.UpdateTorque()
 	m.updateTemp(deltaTime)
+
+	// Update values on the wheels
+	m.wheelRPM = m.Gearbox.GetWheelRPM(m.Rpm)
+	m.wheelTorque = m.Gearbox.GetWheelTorque(m.Torque)
+
 }
 
 func (m *Engine) updateRPM(deltaTime float64) {
@@ -166,13 +187,34 @@ func (m *Engine) randomEngineEvents() string {
 
 func (m *Engine) getState() string {
 	switch {
-	case m.Rpm < 1000:
-		return "idle"
+	case m.Rpm < 850:
+		return "low_idle"
 	case m.Rpm >= m.MaxRPM*0.95:
 		return "rpm_limit"
 	case m.oilTemp >= m.maxTemp*0.9:
 		return "oilTemp_high"
 	default:
 		return "normal"
+	}
+}
+
+func (m *Engine) SetClutch(position float64) {
+	m.Gearbox.SetClutch(position)
+}
+
+func (m *Engine) ShiftGear(gear int) bool {
+	if gear >= 0 && gear <= m.Gearbox.MaxGears {
+		m.Gearbox.CurrentGear = gear
+		return true
+	}
+	return false
+}
+
+func (m *Engine) GetGearboxData() gearbox.Telemetry {
+	return gearbox.Telemetry{
+		CurrentGear:    m.Gearbox.CurrentGear,
+		ClutchPosition: m.Gearbox.ClutchPosition,
+		WheelRPM:       m.wheelRPM,
+		WheelTorque:    m.wheelTorque,
 	}
 }

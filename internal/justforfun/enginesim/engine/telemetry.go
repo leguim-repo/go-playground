@@ -26,7 +26,7 @@ func (d Telemetry) GetEfficiency() float64 {
 // String implements the String interface for human-readable formatting
 func (d Telemetry) String() string {
 	return fmt.Sprintf(
-		"Motor [RPM: %.0f, Torque: %.1f Nm, Temp: %.1f°C, Pot: %.1f kW, Pot: %.1f HP, Estado: %s]",
+		"Motor [RPM: %.0f, Torque: %.1f Nm, Temp: %.1f°C, Pot: %.1f kW, Pot: %.1f HP, State: %s]",
 		d.RPM, d.Torque, d.OilTemp, d.PowerKW, d.PowerHP, d.EngineState,
 	)
 }

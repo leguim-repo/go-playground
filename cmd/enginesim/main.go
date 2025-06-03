@@ -31,55 +31,9 @@ func NewInfluxDBClient(config ConfigInfluxDB) influxdb2.Client {
 	return influxdb2.NewClient(config.URL, config.Token)
 }
 
-func mainVisual() {
-	config := ConfigInfluxDB{
-		Org:    "docs",
-		Bucket: "engine-torque-curve",
-	}
+func oldEngineSimulation() {
+	fmt.Println("Starting engine simulation")
 
-	client := NewInfluxDBClient(config)
-	defer client.Close()
-
-	writeAPI := client.WriteAPIBlocking(config.Org, config.Bucket)
-
-	// Generate torque curves for different throttle positions
-	acceleratorPositions := []float64{0.25, 0.5, 0.75, 1.0}
-
-	motor := engine.NewEngine()
-
-	for _, position := range acceleratorPositions {
-		motor.SetAccelerator(position)
-
-		// Generate points throughout the RPM range
-		for rpm := 800.0; rpm <= motor.MaxRPM; rpm += 100 {
-			motor.Rpm = rpm
-			motor.UpdateTorque()
-
-			engineData := motor.GetData()
-
-			// Create a point for InfluxDB
-			point := write.NewPoint(
-				"torque_curve",
-				map[string]string{
-					"simulation": "engine1",
-					"accelPos":   fmt.Sprintf("%.2f", position),
-				},
-				map[string]interface{}{
-					"rpm":      engineData.RPM,
-					"torque":   engineData.Torque,
-					"power_kw": engineData.PowerKW, // Power in kW
-				},
-				time.Now(),
-			)
-
-			if err := writeAPI.WritePoint(context.Background(), point); err != nil {
-				log.Printf("Error writing data: %v", err)
-			}
-		}
-	}
-}
-
-func mainSim() {
 	config := ConfigInfluxDB{
 		Org:    "docs",
 		Bucket: "engine-simulation",
@@ -122,10 +76,11 @@ func mainSim() {
 				"simulation": "engine1",
 			},
 			map[string]interface{}{
-				"rpm":      engineData.RPM,
-				"torque":   engineData.Torque,
-				"oilTemp":  engineData.OilTemp,
-				"accelPos": engineData.AcceleratorPosition,
+				"rpm":            engineData.RPM,
+				"torque":         engineData.Torque,
+				"oil_temp":       engineData.OilTemp,
+				"accel_position": engineData.AcceleratorPosition,
+				"engine_state":   engineData.EngineState,
 			},
 			time.Now(),
 		)
@@ -137,6 +92,7 @@ func mainSim() {
 }
 
 func main() {
-	mainVisual()
-	mainSim()
+	PlotEngineTorqueCurve()
+	EngineSimulation()
+
 }
