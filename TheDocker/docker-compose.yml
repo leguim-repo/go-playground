@@ -2,6 +2,8 @@ services:
   mosquitto:
     image: eclipse-mosquitto:latest
     container_name: go_mosquitto
+    restart: unless-stopped
+
     environment:
       - TZ=Europe/Madrid
     volumes:
@@ -11,7 +13,6 @@ services:
     ports:
       - "1883:1883"
       - "9001:9001"
-    restart: unless-stopped
 
   mysql_db:
     image: mysql:8.0
@@ -44,6 +45,7 @@ services:
     image: docker.redpanda.com/redpandadata/redpanda:v23.3.11
     container_name: go_redpanda
     restart: unless-stopped
+
     command:
       - redpanda
       - start
@@ -78,6 +80,7 @@ services:
     container_name: go_console_redpanda
     image: docker.redpanda.com/redpandadata/console:v2.4.6
     restart: unless-stopped
+
     entrypoint: /bin/sh
     command: -c 'echo "$$CONSOLE_CONFIG_FILE" > /tmp/config.yml; /app/console'
     environment:
@@ -100,6 +103,8 @@ services:
   influxdb2:
     container_name: go_influxdb2
     image: influxdb:2
+    restart: unless-stopped
+
     ports:
       - "8086:8086"
     environment:
@@ -121,6 +126,16 @@ services:
         source: influxdb2-config
         target: /etc/influxdb2
 
+  grafana:
+    image: grafana/grafana-oss
+    container_name: go_grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - grafana-storage:/var/lib/grafana
+
+
 secrets:
   influxdb2-admin-username:
     file: .env.influxdb2-admin-username
@@ -134,3 +149,4 @@ volumes:
   go_redpanda: null
   influxdb2-data:
   influxdb2-config:
+  grafana-storage: { }
