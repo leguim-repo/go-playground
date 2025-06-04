@@ -135,7 +135,7 @@ func simulateGearShifts(motor *engine.Engine, gearbox *gearbox.Gearbox) {
 		gearData := gearbox.GetGearboxData()
 
 		switch {
-		case engineData.RPM > 8000 && gearData.CurrentGear < 6:
+		case engineData.RPM > 4000 && gearData.CurrentGear < 6:
 			performGearShift(motor, gearbox, gearbox.ShiftUp)
 
 		case engineData.RPM < 2000 && gearData.CurrentGear > 1:
@@ -193,15 +193,17 @@ func createGearboxPoint(gearboxData gearbox.Telemetry) *write.Point {
 	return write.NewPoint(
 		"gearbox_data",
 		map[string]string{
-			"simulation": "engine1",
+			"simulation": "gearbox1",
 		},
 		map[string]interface{}{
-			"input_shaft":     gearboxData.InputShaft,
-			"current_gear":    gearboxData.CurrentGear,
-			"clutch_position": gearboxData.ClutchPosition,
-			"output_shaft":    gearboxData.OutputShaft,
-			"wheel_rpm":       gearboxData.WheelRPM,
-			"wheel_torque":    gearboxData.WheelTorque,
+			"input_shaft":         gearboxData.InputShaft,
+			"output_shaft":        gearboxData.OutputShaft,
+			"current_gear":        gearboxData.CurrentGear,
+			"clutch_position":     gearboxData.ClutchPosition,
+			"input_shaft_torque":  gearboxData.InputShaftTorque,
+			"output_shaft_torque": gearboxData.OutputShaftTorque,
+			//"wheel_rpm":       gearboxData.WheelRPM,
+			//"wheel_torque":    gearboxData.WheelTorque,
 		},
 		time.Now(),
 	)
@@ -217,21 +219,12 @@ func writePoints(writeAPI api.WriteAPIBlocking, points ...*write.Point) error {
 }
 
 func printSimulationStatus(engineData engine.Telemetry, gearboxData gearbox.Telemetry) {
-	fmt.Printf("Engine: RPM=%.0f, torque=%.1f Nm, Gear=%d, Clutch=%.1f%%\n",
+	fmt.Printf("Engine: Speed=%.0f rpm, torque=%.1f Nm, Gear=%d, Clutch=%.1f%%\n",
 		engineData.RPM,
 		engineData.Torque,
 		gearboxData.CurrentGear,
 		gearboxData.ClutchPosition*100)
 
-	fmt.Printf("Gearbox: InputShaft: %.0f, Gear=%d, outputShaft: %.0f, Clutch=%.1f%%, Wheels=%.0f RPM, torque=%.1f Nm\n",
-		gearboxData.InputShaft,
-		gearboxData.CurrentGear,
-		gearboxData.OutputShaft,
-		gearboxData.ClutchPosition*100,
-		gearboxData.WheelRPM,
-		gearboxData.WheelTorque)
+	fmt.Printf(gearboxData.String())
 
-	fmt.Printf("Wheels: RPM=%.0f, torque=%.1f Nm\n",
-		gearboxData.WheelRPM,
-		gearboxData.WheelTorque)
 }
