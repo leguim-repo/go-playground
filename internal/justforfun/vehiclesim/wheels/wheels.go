@@ -41,7 +41,7 @@ func ParseTireSize(spec string) (*TireSize, error) {
 	diameter, _ := strconv.ParseFloat(matches[3], 64)
 
 	// Calculate dimensions
-	sideWallHeight := (width * (aspectRatio / 100))
+	sideWallHeight := width * (aspectRatio / 100)
 	wheelDiameterMM := diameter * InchToMM
 	totalDiameterMM := wheelDiameterMM + (2 * sideWallHeight)
 

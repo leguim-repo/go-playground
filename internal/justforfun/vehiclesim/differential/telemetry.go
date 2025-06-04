@@ -7,7 +7,7 @@ type Telemetry struct {
 	WheelSpeedR float64
 }
 
-func (d *Telemetry) String() string {
+func (d Telemetry) String() string {
 	return fmt.Sprintf("Differential [WheelSpeedL: %.0f RPM, WheelSpeedR: %.0f RPM]\n",
 		d.WheelSpeedL,
 		d.WheelSpeedR)
