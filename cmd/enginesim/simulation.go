@@ -8,9 +8,26 @@ import (
 	"go-playground/internal/justforfun/vehiclesim/differential"
 	"go-playground/internal/justforfun/vehiclesim/engine"
 	"go-playground/internal/justforfun/vehiclesim/gearbox"
+	"go-playground/internal/justforfun/vehiclesim/wheels"
 	"log"
 	"time"
 )
+
+// WheelManager manages vehicle wheels
+type WheelManager struct {
+	wheelPair *wheels.WheelPair
+}
+
+func NewWheelManager(tireSpec string) (*WheelManager, error) {
+	wheelPair, err := wheels.NewWheelPair(tireSpec)
+	if err != nil {
+		return nil, fmt.Errorf("error creating wheels: %v", err)
+	}
+
+	return &WheelManager{
+		wheelPair: wheelPair,
+	}, nil
+}
 
 func EngineSimulation() {
 	fmt.Println("Starting engine simulation")
@@ -29,6 +46,10 @@ func EngineSimulation() {
 	theGearbox := gearbox.NewGearbox()
 	theEngine := engine.NewEngine(theGearbox)
 	theBasicDifferential := differential.NewBasicDifferential(differential.TypeRDiffRatio)
+	wheelManager, err := NewWheelManager("245/40R19")
+	if err != nil {
+		panic(fmt.Sprintf("Error initializing wheels: %v", err))
+	}
 
 	initializeEngineState(theEngine)
 	initializeGearboxState(theGearbox)
@@ -66,15 +87,32 @@ func EngineSimulation() {
 		gearboxData := theGearbox.GetData()
 		differentialData := theBasicDifferential.GetData()
 
+		wheelManager.wheelPair.Update(differentialData.WheelSpeedL, differentialData.WheelSpeedR)
+
+		wheelData := wheelManager.wheelPair.GetTelemetry()
+
 		enginePoint := createEnginePoint(engineData)
 		gearboxPoint := createGearboxPoint(gearboxData)
 		differentialPoint := createDifferentialPoint(differentialData)
+		vehicleDynamicPoint := createVehicleDynamicPoint(wheelData)
 
-		if err := writePoints(writeAPI, enginePoint, gearboxPoint, differentialPoint); err != nil {
+		if err := writePoints(writeAPI, enginePoint, gearboxPoint, differentialPoint, vehicleDynamicPoint); err != nil {
 			log.Printf("Error writting datas: %v", err)
 		}
 
 		printSimulationStatus(engineData, gearboxData, differentialData)
+
+		fmt.Printf("Tire Information:\n")
+		fmt.Printf("- Width: %.0f mm\n", wheelData.TireInfo.WidthMM)
+		fmt.Printf("- Aspect Ratio: %.0f%%\n", wheelData.TireInfo.AspectRatio)
+		fmt.Printf("- Wheel Diameter: %.0f inches\n", wheelData.TireInfo.WheelDiameterIn)
+		fmt.Printf("- Sidewall Height: %.1f mm\n", wheelData.TireInfo.SideWallHeightMM)
+		fmt.Printf("- Total Radius: %.3f m\n", wheelData.TireInfo.TotalRadiusM)
+		fmt.Printf("- Circumference: %.3f m\n", wheelData.TireInfo.CircumferenceM)
+		fmt.Printf("Vehicle Speed: %.2f km/h (%.2f m/s)\n",
+			wheelData.VehicleSpeed.KMH,
+			wheelData.VehicleSpeed.MS)
+
 	}
 }
 
@@ -223,6 +261,19 @@ func createDifferentialPoint(differentialData differential.Telemetry) *write.Poi
 		map[string]interface{}{
 			"wheel_speed_left":  differentialData.WheelSpeedL,
 			"wheel_speed_right": differentialData.WheelSpeedR,
+		},
+		time.Now(),
+	)
+}
+
+func createVehicleDynamicPoint(wheelData wheels.Telemetry) *write.Point {
+	return write.NewPoint(
+		"vehicle_dynamic",
+		map[string]string{
+			"simulation": "vehicle_dynamic",
+		},
+		map[string]interface{}{
+			"vehicle_speed_kmh": wheelData.VehicleSpeed.KMH,
 		},
 		time.Now(),
 	)
