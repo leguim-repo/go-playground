@@ -1,7 +1,7 @@
 package engine
 
 import (
-	"go-playground/internal/justforfun/enginesim/gearbox"
+	"go-playground/internal/justforfun/vehiclesim/gearbox"
 	"math"
 	"math/rand"
 )

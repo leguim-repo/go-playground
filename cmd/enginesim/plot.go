@@ -4,8 +4,8 @@ import (
 	"context"
 	"fmt"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
-	"go-playground/internal/justforfun/enginesim/engine"
-	"go-playground/internal/justforfun/enginesim/gearbox"
+	"go-playground/internal/justforfun/vehiclesim/engine"
+	"go-playground/internal/justforfun/vehiclesim/gearbox"
 	"log"
 	"time"
 )

@@ -5,8 +5,9 @@ import (
 	"fmt"
 	"github.com/influxdata/influxdb-client-go/v2/api"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
-	"go-playground/internal/justforfun/enginesim/engine"
-	"go-playground/internal/justforfun/enginesim/gearbox"
+	"go-playground/internal/justforfun/vehiclesim/differential"
+	"go-playground/internal/justforfun/vehiclesim/engine"
+	"go-playground/internal/justforfun/vehiclesim/gearbox"
 	"log"
 	"time"
 )
@@ -16,7 +17,7 @@ func EngineSimulation() {
 
 	config := ConfigInfluxDB{
 		Org:    "docs",
-		Bucket: "engine-simulation",
+		Bucket: "vehicle-simulation",
 	}
 
 	client := NewInfluxDBClient(config)
@@ -27,6 +28,7 @@ func EngineSimulation() {
 	// Engine initialization and initial state
 	theGearbox := gearbox.NewGearbox()
 	theEngine := engine.NewEngine(theGearbox)
+	theBasicDifferential := differential.NewBasicDifferential(differential.TypeRDiffRatio)
 
 	initializeEngineState(theEngine)
 	initializeGearboxState(theGearbox)
@@ -58,18 +60,21 @@ func EngineSimulation() {
 	for range ticker.C {
 		theEngine.Update(0.1)
 		theGearbox.Update(0.1)
+		theBasicDifferential.Update(theGearbox.OutputShaft, theGearbox.OutputShaftTorque)
 
 		engineData := theEngine.GetData()
 		gearboxData := theGearbox.GetData()
+		differentialData := theBasicDifferential.GetData()
 
 		enginePoint := createEnginePoint(engineData)
 		gearboxPoint := createGearboxPoint(gearboxData)
+		differentialPoint := createDifferentialPoint(differentialData)
 
-		if err := writePoints(writeAPI, enginePoint, gearboxPoint); err != nil {
+		if err := writePoints(writeAPI, enginePoint, gearboxPoint, differentialPoint); err != nil {
 			log.Printf("Error writting datas: %v", err)
 		}
 
-		printSimulationStatus(engineData, gearboxData)
+		printSimulationStatus(engineData, gearboxData, differentialData)
 	}
 }
 
@@ -209,6 +214,20 @@ func createGearboxPoint(gearboxData gearbox.Telemetry) *write.Point {
 	)
 }
 
+func createDifferentialPoint(differentialData differential.Telemetry) *write.Point {
+	return write.NewPoint(
+		"differential_data",
+		map[string]string{
+			"simulation": "basic_differential",
+		},
+		map[string]interface{}{
+			"wheel_speed_left":  differentialData.WheelSpeedL,
+			"wheel_speed_right": differentialData.WheelSpeedR,
+		},
+		time.Now(),
+	)
+}
+
 func writePoints(writeAPI api.WriteAPIBlocking, points ...*write.Point) error {
 	for _, point := range points {
 		if err := writeAPI.WritePoint(context.Background(), point); err != nil {
@@ -218,8 +237,9 @@ func writePoints(writeAPI api.WriteAPIBlocking, points ...*write.Point) error {
 	return nil
 }
 
-func printSimulationStatus(engineData engine.Telemetry, gearboxData gearbox.Telemetry) {
+func printSimulationStatus(engineData engine.Telemetry, gearboxData gearbox.Telemetry, differentialData differential.Telemetry) {
 	fmt.Printf(engineData.String())
 	fmt.Printf(gearboxData.String())
+	fmt.Printf(differentialData.String())
 
 }
