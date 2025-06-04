@@ -27,6 +27,6 @@ func NewInfluxDBClient(config ConfigInfluxDB) influxdb2.Client {
 
 func main() {
 	PlotEngineTorqueCurve()
-	EngineSimulation()
+	VehicleSimulation()
 
 }

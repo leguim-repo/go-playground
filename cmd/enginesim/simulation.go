@@ -13,8 +13,8 @@ import (
 	"time"
 )
 
-func EngineSimulation() {
-	fmt.Println("Starting engine simulation")
+func VehicleSimulation() {
+	fmt.Println("Starting vehicle simulation")
 
 	config := ConfigInfluxDB{
 		Org:    "docs",
