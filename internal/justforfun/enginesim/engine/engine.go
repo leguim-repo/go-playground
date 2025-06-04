@@ -17,10 +17,11 @@ type Engine struct {
 	waterTemp       float64
 
 	// Engine limits
-	MaxRPM    float64
-	maxTorque float64
-	maxTemp   float64
-	minTemp   float64
+	MaxRPM                float64
+	maxTorque             float64
+	maxTheoreticalPowerKW float64
+	maxTemp               float64
+	minTemp               float64
 
 	// Engine dynamics
 	inertia float64 // How quickly the Engine responds
@@ -35,18 +36,19 @@ type Engine struct {
 func NewEngine(theGearbox *gearbox.Gearbox) *Engine {
 
 	return &Engine{
-		Gearbox:        theGearbox,
-		Rpm:            800, // Low Idle
-		torque:         0,
-		oilTemp:        80, // Initial oil temperature
-		acceleratorPos: 0,
-		MaxRPM:         8500, // Max RPM
-		maxTorque:      450,  // Nm
-		maxTemp:        120,  // Max oil temperature
-		minTemp:        70,   // Min oil temperature in normal conditions
-		inertia:        0.3,  // Inertia Engine factor (0-1)
-		rpmMaxTorque:   3500, // Typical RPM for maximum torque
-		rpmMaxPower:    5500, // Typical RPM for maximum power
+		Gearbox:               theGearbox,
+		Rpm:                   800, // Low Idle
+		torque:                0,
+		oilTemp:               80, // Initial oil temperature
+		acceleratorPos:        0,
+		MaxRPM:                8500,  // Max RPM
+		maxTorque:             450,   // Nm
+		maxTheoreticalPowerKW: 150.0, // kW, adjust to specifications
+		maxTemp:               120,   // Max oil temperature
+		minTemp:               70,    // Min oil temperature in normal conditions
+		inertia:               0.3,   // Inertia Engine factor (0-1)
+		rpmMaxTorque:          3500,  // Typical RPM for maximum torque
+		rpmMaxPower:           5500,  // Typical RPM for maximum power
 	}
 }
 
@@ -76,6 +78,7 @@ func (m *Engine) Update(deltaTime float64) {
 	// TODO: Improve coupling between engine and gearbox. This way is the best way? Maybe a better way is to have a channels between the engine goroutine and the gearbox goroutine.
 	// Coupling engine with the gearbox. The rpm engine is the gearbox input shaft
 	m.Gearbox.InputShaft = m.Rpm
+	m.Gearbox.InputShaftTorque = m.torque
 	// Update gearbox
 	m.Gearbox.Update(deltaTime)
 }
@@ -152,23 +155,6 @@ func (m *Engine) updateOilTemp(deltaTime float64) {
 	m.oilTemp = math.Max(m.minTemp, math.Min(m.maxTemp, m.oilTemp))
 }
 
-// GetData Function to collect data from the Engine
-func (m *Engine) GetData() Telemetry {
-	powerKW := (m.torque * m.Rpm) / 9549.297
-	powerHP := powerKW * 1.341
-
-	return Telemetry{
-		RPM:                 m.Rpm,
-		Torque:              m.torque,
-		OilTemp:             m.oilTemp,
-		AcceleratorPosition: m.acceleratorPos,
-		PowerKW:             powerKW,
-		PowerHP:             powerHP,
-		EngineState:         m.getState(),
-	}
-
-}
-
 // randomEngineEvents Function to simulate random engine events
 func (m *Engine) randomEngineEvents() string {
 	// 0.1% chance
@@ -194,4 +180,39 @@ func (m *Engine) getState() string {
 	default:
 		return "normal"
 	}
+}
+
+// calculatePowerKw calculates the power in kW (kilowatt) based on the torque and RPM.
+// The conversion factor is 9549.297 (1 kW = 745.7 W)
+func (m *Engine) calculatePowerKw() float64 {
+	return (m.torque * m.Rpm) / 9549.297
+}
+
+// calculatePowerHp calculates the power in HP (horsepower) based on the torque and RPM.
+// The conversion factor is 1.341 (1 HP = 745.7 W)
+func (m *Engine) calculatePowerHp() float64 {
+	return (m.torque * m.Rpm) / 9549.297 * 1.341
+}
+
+// calculateEngineEfficiency calculates an approximate efficiency
+func (m *Engine) calculateEngineEfficiency() float64 {
+	maxTheoreticalPower := 150.0 // kW, adjust to specifications
+	return (m.calculatePowerKw() / maxTheoreticalPower) * 100
+}
+
+// GetData Function to collect data from the Engine
+func (m *Engine) GetData() Telemetry {
+	powerKW := m.calculatePowerKw()
+	powerHP := m.calculatePowerHp()
+
+	return Telemetry{
+		RPM:                 m.Rpm,
+		Torque:              m.torque,
+		OilTemp:             m.oilTemp,
+		AcceleratorPosition: m.acceleratorPos,
+		PowerKW:             powerKW,
+		PowerHP:             powerHP,
+		EngineState:         m.getState(),
+	}
+
 }
