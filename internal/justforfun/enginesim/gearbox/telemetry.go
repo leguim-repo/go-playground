@@ -14,12 +14,13 @@ type Telemetry struct {
 // String implements the String interface for human-readable formatting
 func (d Telemetry) String() string {
 	return fmt.Sprintf(
-		"Gearbox [Gear=%d, Clutch=%.1f %s, InputShaft: %.0f rpm, OutputShaft: %.0f rpm, OutputShaftTorque=%.1f Nm]\n",
+		"Gearbox [Gear=%d, Clutch=%.1f %s, InputShaft: %.0f rpm, OutputShaft: %.0f rpm, InputShaftTorque=%.1f Nm, OutputShaftTorque=%.1f Nm]\n",
 		d.CurrentGear,
 		d.getClutchPositionPercentile(),
 		" %%", // Separate the percentage to avoid errors
 		d.InputShaft,
 		d.OutputShaft,
+		d.InputShaftTorque,
 		d.OutputShaftTorque,
 	)
 }

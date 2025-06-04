@@ -60,7 +60,7 @@ func EngineSimulation() {
 		theGearbox.Update(0.1)
 
 		engineData := theEngine.GetData()
-		gearboxData := theGearbox.GetGearboxData()
+		gearboxData := theGearbox.GetData()
 
 		enginePoint := createEnginePoint(engineData)
 		gearboxPoint := createGearboxPoint(gearboxData)
@@ -132,13 +132,13 @@ func simulateGearShifts(motor *engine.Engine, gearbox *gearbox.Gearbox) {
 
 	for {
 		engineData := motor.GetData()
-		gearData := gearbox.GetGearboxData()
+		gearboxData := gearbox.GetData()
 
 		switch {
-		case engineData.RPM > 4000 && gearData.CurrentGear < 6:
+		case engineData.RPM > 4000 && gearboxData.CurrentGear < 6:
 			performGearShift(motor, gearbox, gearbox.ShiftUp)
 
-		case engineData.RPM < 2000 && gearData.CurrentGear > 1:
+		case engineData.RPM < 2000 && gearboxData.CurrentGear > 1:
 			performGearShift(motor, gearbox, gearbox.ShiftDown)
 		}
 
@@ -219,12 +219,7 @@ func writePoints(writeAPI api.WriteAPIBlocking, points ...*write.Point) error {
 }
 
 func printSimulationStatus(engineData engine.Telemetry, gearboxData gearbox.Telemetry) {
-	fmt.Printf("Engine: Speed=%.0f rpm, torque=%.1f Nm, Gear=%d, Clutch=%.1f%%\n",
-		engineData.RPM,
-		engineData.Torque,
-		gearboxData.CurrentGear,
-		gearboxData.ClutchPosition*100)
-
+	fmt.Printf(engineData.String())
 	fmt.Printf(gearboxData.String())
 
 }
