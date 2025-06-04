@@ -13,22 +13,6 @@ import (
 	"time"
 )
 
-// WheelManager manages vehicle wheels
-type WheelManager struct {
-	wheelPair *wheels.WheelPair
-}
-
-func NewWheelManager(tireSpec string) (*WheelManager, error) {
-	wheelPair, err := wheels.NewWheelPair(tireSpec)
-	if err != nil {
-		return nil, fmt.Errorf("error creating wheels: %v", err)
-	}
-
-	return &WheelManager{
-		wheelPair: wheelPair,
-	}, nil
-}
-
 func EngineSimulation() {
 	fmt.Println("Starting engine simulation")
 
@@ -46,7 +30,8 @@ func EngineSimulation() {
 	theGearbox := gearbox.NewGearbox()
 	theEngine := engine.NewEngine(theGearbox)
 	theBasicDifferential := differential.NewBasicDifferential(differential.TypeRDiffRatio)
-	wheelManager, err := NewWheelManager("245/40R19")
+
+	wheelManager, err := wheels.NewWheelManager("245/40R19")
 	if err != nil {
 		panic(fmt.Sprintf("Error initializing wheels: %v", err))
 	}
@@ -87,9 +72,9 @@ func EngineSimulation() {
 		gearboxData := theGearbox.GetData()
 		differentialData := theBasicDifferential.GetData()
 
-		wheelManager.wheelPair.Update(differentialData.WheelSpeedL, differentialData.WheelSpeedR)
+		wheelManager.WheelPair.Update(differentialData.WheelSpeedL, differentialData.WheelSpeedR)
 
-		wheelsData := wheelManager.wheelPair.GetData()
+		wheelsData := wheelManager.WheelPair.GetData()
 
 		enginePoint := createEnginePoint(engineData)
 		gearboxPoint := createGearboxPoint(gearboxData)
@@ -204,7 +189,7 @@ func performGearShift(motor *engine.Engine, gearbox *gearbox.Gearbox, shiftGear 
 
 func createEnginePoint(engineData engine.Telemetry) *write.Point {
 	return write.NewPoint(
-		"engine_data",
+		"engine",
 		map[string]string{
 			"simulation": "engine1",
 		},
@@ -223,7 +208,7 @@ func createEnginePoint(engineData engine.Telemetry) *write.Point {
 
 func createGearboxPoint(gearboxData gearbox.Telemetry) *write.Point {
 	return write.NewPoint(
-		"gearbox_data",
+		"gearbox",
 		map[string]string{
 			"simulation": "gearbox1",
 		},
@@ -243,7 +228,7 @@ func createGearboxPoint(gearboxData gearbox.Telemetry) *write.Point {
 
 func createDifferentialPoint(differentialData differential.Telemetry) *write.Point {
 	return write.NewPoint(
-		"differential_data",
+		"differential",
 		map[string]string{
 			"simulation": "basic_differential",
 		},
