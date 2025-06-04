@@ -88,6 +88,12 @@ func (g *Gearbox) SetGear(targetGear int) bool {
 	return false
 }
 
+// GetOutputShaftTorque Calculate the torque at the wheels
+func (g *Gearbox) GetOutputShaftTorque(engineTorque float64) float64 {
+	efficiency := 0.92 // Transmission efficiency
+	return engineTorque * g.GetCurrentRatio() * efficiency * g.ClutchPosition
+}
+
 func (g *Gearbox) GetData() Telemetry {
 	return Telemetry{
 		ClutchPosition:    g.ClutchPosition,
@@ -97,10 +103,4 @@ func (g *Gearbox) GetData() Telemetry {
 		InputShaftTorque:  g.InputShaftTorque,
 		OutputShaftTorque: g.OutputShaftTorque,
 	}
-}
-
-// GetOutputShaftTorque Calculate the torque at the wheels
-func (g *Gearbox) GetOutputShaftTorque(engineTorque float64) float64 {
-	efficiency := 0.92 // Transmission efficiency
-	return engineTorque * g.GetCurrentRatio() * efficiency * g.ClutchPosition
 }

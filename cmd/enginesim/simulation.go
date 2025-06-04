@@ -89,29 +89,18 @@ func EngineSimulation() {
 
 		wheelManager.wheelPair.Update(differentialData.WheelSpeedL, differentialData.WheelSpeedR)
 
-		wheelData := wheelManager.wheelPair.GetTelemetry()
+		wheelsData := wheelManager.wheelPair.GetData()
 
 		enginePoint := createEnginePoint(engineData)
 		gearboxPoint := createGearboxPoint(gearboxData)
 		differentialPoint := createDifferentialPoint(differentialData)
-		vehicleDynamicPoint := createVehicleDynamicPoint(wheelData)
+		vehicleDynamicPoint := createVehicleDynamicPoint(wheelsData)
 
 		if err := writePoints(writeAPI, enginePoint, gearboxPoint, differentialPoint, vehicleDynamicPoint); err != nil {
 			log.Printf("Error writting datas: %v", err)
 		}
 
-		printSimulationStatus(engineData, gearboxData, differentialData)
-
-		fmt.Printf("Tire Information:\n")
-		fmt.Printf("- Width: %.0f mm\n", wheelData.TireInfo.WidthMM)
-		fmt.Printf("- Aspect Ratio: %.0f%%\n", wheelData.TireInfo.AspectRatio)
-		fmt.Printf("- Wheel Diameter: %.0f inches\n", wheelData.TireInfo.WheelDiameterIn)
-		fmt.Printf("- Sidewall Height: %.1f mm\n", wheelData.TireInfo.SideWallHeightMM)
-		fmt.Printf("- Total Radius: %.3f m\n", wheelData.TireInfo.TotalRadiusM)
-		fmt.Printf("- Circumference: %.3f m\n", wheelData.TireInfo.CircumferenceM)
-		fmt.Printf("Vehicle Speed: %.2f km/h (%.2f m/s)\n",
-			wheelData.VehicleSpeed.KMH,
-			wheelData.VehicleSpeed.MS)
+		printSimulationStatus(engineData, gearboxData, differentialData, wheelsData)
 
 	}
 }
@@ -288,9 +277,9 @@ func writePoints(writeAPI api.WriteAPIBlocking, points ...*write.Point) error {
 	return nil
 }
 
-func printSimulationStatus(engineData engine.Telemetry, gearboxData gearbox.Telemetry, differentialData differential.Telemetry) {
+func printSimulationStatus(engineData engine.Telemetry, gearboxData gearbox.Telemetry, differentialData differential.Telemetry, wheelsData wheels.Telemetry) {
 	fmt.Printf(engineData.String())
 	fmt.Printf(gearboxData.String())
 	fmt.Printf(differentialData.String())
-
+	fmt.Printf(wheelsData.String())
 }
