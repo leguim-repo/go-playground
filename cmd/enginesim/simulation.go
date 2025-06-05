@@ -152,7 +152,7 @@ func simulateGearShifts(motor *engine.Engine, gearbox *gearbox.Gearbox) {
 		gearboxData := gearbox.GetData()
 
 		switch {
-		case engineData.RPM > 4000 && gearboxData.CurrentGear < 6:
+		case engineData.RPM > 4000 && gearboxData.CurrentGear < 7:
 			performGearShift(motor, gearbox, gearbox.ShiftUp)
 
 		case engineData.RPM < 2000 && gearboxData.CurrentGear > 1:

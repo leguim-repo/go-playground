@@ -19,18 +19,19 @@ func NewGearbox() *Gearbox {
 	return &Gearbox{
 		currentGear:    0, // 0 = neutral
 		ClutchPosition: 0.0,
-		maxGears:       6,
+		maxGears:       7,
 		// Gear ratios
 		gearRatios: []float64{
 			0.0,   // Neutral
-			3.827, // 1
-			2.359, // 2
-			1.656, // 3
-			1.221, // 4
-			1.000, // 5
-			0.831, // 6
+			3.4,   // 1
+			2.75,  // 2
+			1.767, // 3
+			0.925, // 4
+			0.705, // 5
+			0.755, // 6
+			0.635, // 7
 		},
-		finalDrive: 3.42, // Final differential ratio
+		finalDrive: 4.471, // Final differential ratio
 	}
 }
 
