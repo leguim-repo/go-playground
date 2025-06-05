@@ -66,7 +66,7 @@ func VehicleSimulation() {
 	for range ticker.C {
 		theEngine.Update(0.1)
 		theGearbox.Update(0.1)
-		theBasicDifferential.Update(theGearbox.OutputShaft, theGearbox.OutputShaftTorque)
+		theBasicDifferential.Update(theGearbox.OutputShaft, theGearbox.OutputShaftTorque, 0.0)
 
 		engineData := theEngine.GetData()
 		gearboxData := theGearbox.GetData()

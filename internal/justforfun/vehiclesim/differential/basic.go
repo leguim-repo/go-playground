@@ -19,9 +19,8 @@ func NewBasicDifferential(gearRatio float64) *Differential {
 }
 
 // Update calculates the speeds and torque for the wheels based on the input
-func (d *Differential) Update(inputShaftRPM float64, inputTorque float64) {
+func (d *Differential) Update(inputShaftRPM float64, inputTorque float64, slipRatio float64) {
 	// slipRatio is an external input and should be calculated in based on steering angle, terrain, wheel grip, etc.
-	slipRatio := 0.0 //for no slip
 
 	// Basic output ratio based on a differential ratio
 	wheelRPM := inputShaftRPM / d.gearRatio
