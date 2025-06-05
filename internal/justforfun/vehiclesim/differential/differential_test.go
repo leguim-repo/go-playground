@@ -25,7 +25,7 @@ func TestDifferentialBehavior(t *testing.T) {
 		diff.Update(inputRPM, inputTorque, slip)
 		data := diff.GetData()
 
-		// Use Logf for print results for manual observation only with test is launched with flag -v
+		// Use Logf for print results for manual observation only with the test is launched with flag -v
 		t.Logf("SlipRatio: %-5.2f -> Left wheel: %7.2f RPM, Right wheel: %7.2f RPM",
 			slip, data.WheelSpeedL, data.WheelSpeedR)
 

@@ -74,3 +74,7 @@ clean: ## Target to clean up built binaries
 	@rm -rf ${BUILD_FOLDER_MACOS_INTEL}
 	@rm -rf ${BUILD_FOLDER_MACOS_SILICON}
 	@echo "Build directory removed."
+
+.PHONY: unit-tests
+unit-tests: ## Launch all unit tests found in modules
+	@go test ./... -v
