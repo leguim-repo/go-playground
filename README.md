@@ -8,3 +8,7 @@ But, you can look at the code and make your eyes bleed with it.
 
 Enjoy with music
 https://www.youtube.com/watch?v=zL19uMsnpSU
+
+
+## Minio
+https://min.io/docs/minio/linux/developers/go/minio-go.html
