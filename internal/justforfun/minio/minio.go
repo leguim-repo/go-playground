@@ -17,6 +17,23 @@ func printListBuckets(client *minio.Client) {
 	}
 }
 
+func printListObjects(client *minio.Client, bucketName string) {
+	ctx, cancel := context.WithCancel(context.Background())
+	log.Println("Objects found in bucket: ", bucketName)
+	defer cancel()
+
+	objectCh := client.ListObjects(ctx, bucketName, minio.ListObjectsOptions{
+		Recursive: true,
+	})
+	for object := range objectCh {
+		if object.Err != nil {
+			log.Println(object.Err)
+			return
+		}
+		log.Println("* ", object.Key)
+	}
+}
+
 func main() {
 	endpoint := "localhost:8090"
 	accessKeyID := "admin"
@@ -56,4 +73,5 @@ func main() {
 	}
 
 	printListBuckets(minioClient)
+	printListObjects(minioClient, "raw")
 }

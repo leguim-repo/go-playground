@@ -1,0 +1,124 @@
+{
+  "weapons": {
+    "assault_rifles": [
+      {
+        "name": "HK416",
+        "caliber": "5.56x45mm NATO",
+        "description": "An assault rifle designed by Heckler & Koch, favored by many special operations units for its reliability. It is the weapon reportedly used in the operation that resulted in the death of Osama bin Laden."
+      },
+      {
+        "name": "M4A1",
+        "caliber": "5.56x45mm NATO",
+        "description": "An updated version of the M4 carbine, with fully automatic fire capability. Highly customizable with a variety of optics and accessories."
+      },
+      {
+        "name": "MK 18 Mod 0 CQBR",
+        "caliber": "5.56x45mm NATO",
+        "description": "A Close Quarters Battle Rifle (CQBR) based on the M4A1, with a shorter barrel that makes it ideal for combat in confined spaces."
+      },
+      {
+        "name": "FN SCAR-H (MK 17)",
+        "caliber": "7.62x51mm NATO",
+        "description": "A Belgian-made battle rifle that offers greater stopping power than 5.56mm weapons. It is known for its reliability and modularity."
+      },
+      {
+        "name": "FN SCAR-L (MK 16)",
+        "caliber": "5.56x45mm NATO",
+        "description": "The lighter variant of the SCAR, used in various combat situations. Although largely replaced by the HK416, it remains in limited use."
+      }
+    ],
+    "pistols": [
+      {
+        "name": "SIG Sauer P226 MK25",
+        "caliber": "9x19mm Parabellum",
+        "description": "The official sidearm of the Navy SEALs for many years. It is known for its durability and reliability, especially in maritime environments."
+      },
+      {
+        "name": "Glock 19",
+        "caliber": "9x19mm Parabellum",
+        "description": "A popular pistol among special forces for its reliability, light weight, and high ammunition capacity. It has been more recently adopted by the SEALs."
+      },
+      {
+        "name": "Heckler & Koch HK45C",
+        "caliber": ".45 ACP",
+        "description": "A compact .45 caliber pistol that offers great stopping power in a manageable size."
+      }
+    ],
+    "sniper_rifles": [
+      {
+        "name": "MK 13 Mod 5",
+        "caliber": ".300 Winchester Magnum",
+        "description": "A bolt-action sniper rifle based on the Remington 700 action. It is the primary sniper rifle of the Navy SEALs."
+      },
+      {
+        "name": "McMillan TAC-50 (MK 15)",
+        "caliber": ".50 BMG",
+        "description": "A long-range anti-materiel sniper rifle. It is used to engage targets at extreme distances and lightly armored vehicles."
+      },
+      {
+        "name": "Barrett M82/M107",
+        "caliber": ".50 BMG",
+        "description": "A semi-automatic anti-materiel sniper rifle, used for neutralizing long-range targets and for explosive ordnance disposal."
+      },
+      {
+        "name": "Knight's Armament Company SR-25 (MK 11)",
+        "caliber": "7.62x51mm NATO",
+        "description": "A semi-automatic sniper rifle that allows for rapid follow-up shots."
+      }
+    ],
+    "machine_guns": [
+      {
+        "name": "M249 SAW",
+        "caliber": "5.56x45mm NATO",
+        "description": "A light machine gun that provides significant suppressive fire at the squad level."
+      },
+      {
+        "name": "MK 48 Mod 0/1",
+        "caliber": "7.62x51mm NATO",
+        "description": "A more powerful light machine gun than the M249, based on the FN Minimi design."
+      },
+      {
+        "name": "M60E4 (MK 43 Mod 1)",
+        "caliber": "7.62x51mm NATO",
+        "description": "An improved version of the M60 machine gun, lighter and more reliable than its predecessors."
+      }
+    ],
+    "shotguns": [
+      {
+        "name": "Benelli M4 (M1014)",
+        "caliber": "12 Gauge",
+        "description": "A semi-automatic shotgun used for breaching and close-quarters combat."
+      },
+      {
+        "name": "Mossberg 590A1",
+        "caliber": "12 Gauge",
+        "description": "A robust and reliable pump-action shotgun, popular with law enforcement and military forces."
+      }
+    ],
+    "submachine_guns": [
+      {
+        "name": "Heckler & Koch MP7",
+        "caliber": "4.6x30mm",
+        "description": "A compact personal defense weapon that offers greater armor-piercing capability than traditional pistols."
+      }
+    ],
+    "explosives_and_launchers": [
+      {
+        "name": "M72 LAW",
+        "type": "Light Anti-tank Weapon"
+      },
+      {
+        "name": "M203 / M320",
+        "type": "40mm Grenade Launcher"
+      },
+      {
+        "name": "C4",
+        "type": "Plastic Explosive"
+      },
+      {
+        "name": "M67 Fragmentation Grenades",
+        "type": "Hand Grenade"
+      }
+    ]
+  }
+}

@@ -158,6 +158,23 @@ services:
       timeout: 5s
       retries: 5
 
+  minio_setup:
+    image: minio/mc
+    volumes:
+      - ./minio/data:/data
+    entrypoint: >
+      /bin/sh -c "
+      /bin/sleep 5;
+      /usr/bin/mc alias set the_minio http://minio:9000 admin password;
+      /usr/bin/mc mb the_minio/hive-metastore-warehouse;
+      /usr/bin/mc policy set public the_minio/hive-metastore-warehouse;
+      /usr/bin/mc mb the_minio/raw;
+      /usr/bin/mc policy set public the_minio/raw;
+      /usr/bin/mc cp /data/navy_seals_inventory.json the_minio/raw/;
+      exit 0;
+      "
+    depends_on:
+      - minio
 
 secrets:
   influxdb2-admin-username:
