@@ -1,4 +1,4 @@
-package main
+package vehiclesim
 
 import (
 	"context"
@@ -6,18 +6,19 @@ import (
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
 	"go-playground/internal/justforfun/vehiclesim/engine"
 	"go-playground/internal/justforfun/vehiclesim/gearbox"
+	"go-playground/internal/justforfun/vehiclesim/influx"
 	"log"
 	"time"
 )
 
 func PlotEngineTorqueCurve() {
 	fmt.Println("Plotting engine torque curve")
-	config := ConfigInfluxDB{
+	config := influx.ConfigInfluxDB{
 		Org:    "docs",
 		Bucket: "engine-torque-curve",
 	}
 
-	client := NewInfluxDBClient(config)
+	client := influx.NewInfluxDBClient(config)
 	defer client.Close()
 
 	writeAPI := client.WriteAPIBlocking(config.Org, config.Bucket)

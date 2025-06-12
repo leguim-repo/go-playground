@@ -1,4 +1,4 @@
-package main
+package vehiclesim
 
 import (
 	"context"
@@ -8,6 +8,7 @@ import (
 	"go-playground/internal/justforfun/vehiclesim/differential"
 	"go-playground/internal/justforfun/vehiclesim/engine"
 	"go-playground/internal/justforfun/vehiclesim/gearbox"
+	"go-playground/internal/justforfun/vehiclesim/influx"
 	"go-playground/internal/justforfun/vehiclesim/wheels"
 	"log"
 	"time"
@@ -16,12 +17,12 @@ import (
 func VehicleSimulation() {
 	fmt.Println("Starting vehicle simulation")
 
-	config := ConfigInfluxDB{
+	config := influx.ConfigInfluxDB{
 		Org:    "docs",
 		Bucket: "vehicle-simulation",
 	}
 
-	client := NewInfluxDBClient(config)
+	client := influx.NewInfluxDBClient(config)
 	defer client.Close()
 
 	writeAPI := client.WriteAPIBlocking(config.Org, config.Bucket)
