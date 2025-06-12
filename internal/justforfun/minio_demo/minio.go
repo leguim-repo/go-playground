@@ -1,4 +1,4 @@
-package main
+package minio_demo
 
 import (
 	"context"
@@ -17,8 +17,8 @@ type MinioConfig struct {
 	UseSSL          bool
 }
 
-// initMinioClient initializes and returns a new MinIO client
-func initMinioClient(config MinioConfig) (*minio.Client, error) {
+// InitMinioClient initializes and returns a new MinIO client
+func InitMinioClient(config MinioConfig) (*minio.Client, error) {
 	// Initialize MinIO client object
 	minioClient, err := minio.New(config.Endpoint, &minio.Options{
 		Creds:  credentials.NewStaticV4(config.AccessKeyID, config.SecretAccessKey, ""),
@@ -31,8 +31,8 @@ func initMinioClient(config MinioConfig) (*minio.Client, error) {
 	return minioClient, nil
 }
 
-// getObjectContent retrieves the content of an object from MinIO bucket and returns it as a string
-func getObjectContent(ctx context.Context, client *minio.Client, bucketName, objectName string) (string, error) {
+// GetObjectContent retrieves the content of an object from MinIO bucket and returns it as a string
+func GetObjectContent(ctx context.Context, client *minio.Client, bucketName, objectName string) (string, error) {
 	// Get object from bucket
 	object, err := client.GetObject(ctx, bucketName, objectName, minio.GetObjectOptions{})
 	if err != nil {
@@ -49,8 +49,8 @@ func getObjectContent(ctx context.Context, client *minio.Client, bucketName, obj
 	return string(content), nil
 }
 
-// downloadObject downloads an object from MinIO bucket to a local file
-func downloadObject(ctx context.Context, client *minio.Client, bucketName, objectName, localPath string) error {
+// DownloadObject downloads an object from MinIO bucket to a local file
+func DownloadObject(ctx context.Context, client *minio.Client, bucketName, objectName, localPath string) error {
 	// Download object to local file
 	err := client.FGetObject(ctx, bucketName, objectName, localPath, minio.GetObjectOptions{})
 	if err != nil {
@@ -60,7 +60,7 @@ func downloadObject(ctx context.Context, client *minio.Client, bucketName, objec
 	return nil
 }
 
-func printListBuckets(ctx context.Context, client *minio.Client) {
+func PrintListBuckets(ctx context.Context, client *minio.Client) {
 	buckets, err := client.ListBuckets(ctx)
 	if err != nil {
 		log.Fatalln(err)
@@ -70,7 +70,7 @@ func printListBuckets(ctx context.Context, client *minio.Client) {
 	}
 }
 
-func printListObjects(client *minio.Client, bucketName string) {
+func PrintListObjects(client *minio.Client, bucketName string) {
 	ctx, cancel := context.WithCancel(context.Background())
 	log.Println("Objects found in bucket: ", bucketName)
 	defer cancel()
@@ -85,43 +85,4 @@ func printListObjects(client *minio.Client, bucketName string) {
 		}
 		log.Println("* ", object.Key)
 	}
-}
-
-func main() {
-	// Define MinIO configuration
-	config := MinioConfig{
-		Endpoint:        "localhost:8090",
-		AccessKeyID:     "admin",
-		SecretAccessKey: "password",
-		UseSSL:          false,
-	}
-
-	// Initialize MinIO client
-	minioClient, err := initMinioClient(config)
-	if err != nil {
-		log.Fatalf("Error initializing MinIO client: %v", err)
-	}
-
-	ctx := context.Background()
-	bucketName := "raw"
-	objectName := "navy_seals_inventory.json"
-
-	printListBuckets(ctx, minioClient)
-	printListObjects(minioClient, bucketName)
-
-	// Get object content example
-	content, err := getObjectContent(ctx, minioClient, bucketName, objectName)
-	if err != nil {
-		log.Fatalf("Error getting object content: %v", err)
-	}
-	fmt.Println("Object content:", content)
-
-	// Download object example
-	localPath := "./datalake/downloaded-navy_seals_inventory.json"
-	err = downloadObject(ctx, minioClient, bucketName, objectName, localPath)
-	if err != nil {
-		log.Fatalf("Error downloading object: %v", err)
-	}
-	fmt.Printf("Object downloaded successfully to %s\n", localPath)
-
 }
