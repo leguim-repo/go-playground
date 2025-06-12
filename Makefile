@@ -9,6 +9,10 @@ BUILD_FOLDER_RPI=build-rpi
 BUILD_FOLDER_MACOS_INTEL=build-macos-intel
 BUILD_FOLDER_MACOS_SILICON=build-macos-silicon
 
+DOCKER_COMPOSE_DIR = TheDocker
+DOCKER_COMPOSE = docker compose -f $(DOCKER_COMPOSE_DIR)/docker-compose.yml
+
+
 .PHONY: help
 help: ## Prints all targets available and their description
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[36m%-30s\033[0m %s\n", $$1, $$2}'
@@ -78,3 +82,35 @@ clean: ## Target to clean up built binaries
 .PHONY: unit-tests
 unit-tests: ## Launch all unit tests found in modules
 	@go test ./... -v
+
+.PHONY: docker-up
+docker-up: ## Up The Docker
+	@$(DOCKER_COMPOSE) up -d
+
+
+.PHONY: docker-down
+docker-down: ## Down The Docker
+	@$(DOCKER_COMPOSE) down
+
+.PHONY: docker-restart
+docker-restart: ## Restart The Docker
+	@$(DOCKER_COMPOSE) restart
+
+.PHONY: docker-logs
+docker-logs: ## View The Docker logs
+	@$(DOCKER_COMPOSE) logs -f
+
+.PHONY: docker-ps
+docker-ps: ## View state of The Docker
+	@$(DOCKER_COMPOSE) ps
+
+.PHONY: docker-clean
+docker-clean: ## Clean The Docker
+	@$(DOCKER_COMPOSE) down -v --remove-orphans
+
+.PHONY: docker-rebuild
+docker-rebuild: ## Rebuild The Docker
+	@$(DOCKER_COMPOSE) up -d --build
+
+.PHONY: docker-reset
+docker-reset: docker-clean docker-rebuild ## Reset The Docker
