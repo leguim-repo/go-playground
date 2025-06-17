@@ -8,12 +8,26 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
+type ConfigRedPanda struct {
+	SeedBrokers   []string
+	Topic         string
+	ConsumerGroup string
+}
+
+func NewConfigRedPandas() *ConfigRedPanda {
+	return &ConfigRedPanda{
+		SeedBrokers:   []string{"localhost:19092"},
+		Topic:         "foobar",
+		ConsumerGroup: "my-foobar-group",
+	}
+}
 func DemoConsumer() {
-	seeds := []string{"localhost:19092"}
+	configRedPanda := NewConfigRedPandas()
+
 	client, err := kgo.NewClient(
-		kgo.SeedBrokers(seeds...),
-		kgo.ConsumerGroup("my-foobar-group"),
-		kgo.ConsumeTopics("foobar"),
+		kgo.SeedBrokers(configRedPanda.SeedBrokers...),
+		kgo.ConsumerGroup(configRedPanda.ConsumerGroup),
+		kgo.ConsumeTopics(configRedPanda.Topic),
 	)
 	if err != nil {
 		log.Fatal("Error creating client:", err)
