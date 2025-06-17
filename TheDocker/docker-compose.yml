@@ -126,6 +126,22 @@ services:
         source: influxdb2-config
         target: /etc/influxdb2
 
+  configure_influxdb:
+    image: influxdb:2
+    depends_on:
+      - influxdb2
+    entrypoint: /bin/sh -c "
+      until curl -s http://influxdb2:8086/health | grep pass; do
+      echo 'Waiting InfluxDB...'; sleep 2;
+      done;
+      influx bucket create -n pepe -o docs --token $(cat /run/secrets/influxdb2-admin-token);
+      "
+    secrets:
+      - influxdb2-admin-token
+    environment:
+      INFLUX_HOST: http://influxdb2:8086
+
+
   grafana:
     image: grafana/grafana-oss
     container_name: go_grafana
