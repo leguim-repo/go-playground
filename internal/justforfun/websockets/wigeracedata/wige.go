@@ -46,20 +46,22 @@ func getCurrentDirectory() string {
 	return currentDirectory
 }
 
-func saveData(messageWS string) {
-	/*
-		jsonData, err := json.Marshal(messageWS)
-		if err != nil {
-			log.Printf("Error convert message to JSON: %s", err)
-			return
-		}
-	*/
+func saveData(messageWS string, sessionName string) {
 
 	jsonData := []byte(messageWS)
 	incrementGlobalMessageCounter()
 	currentTimeUTC := datetimeutils.Now()
+	partition, _ := datetimeutils.CreatePartitionStamp(currentTimeUTC)
 	formattedTimeStamp, err := datetimeutils.CreateFileTimeStamp(currentTimeUTC)
-	fileName := getCurrentDirectory() + "/datalake/QUALY24HN_SUNDAY_" + strconv.Itoa(globalMessageCounter) + "_" + string(formattedTimeStamp) + ".json"
+
+	dataLakePath := getCurrentDirectory() + "/datalake/" + partition + "/" + sessionName + "/"
+
+	if err := os.MkdirAll(dataLakePath, 0755); err != nil {
+		log.Printf("Error creando directorio: %s", err)
+		return
+	}
+
+	fileName := dataLakePath + sessionName + "_" + strconv.Itoa(globalMessageCounter) + "_" + string(formattedTimeStamp) + ".json"
 
 	err = os.WriteFile(fileName, jsonData, 0644)
 	if err != nil {
@@ -122,7 +124,7 @@ func WigeRaceData() {
 				return
 			}
 			//log.Printf("Message received (type %d): %s", messageType, string(message))
-			saveData(string(message))
+			saveData(string(message), "24HN_CLASSIC_QUALY_1")
 		}
 	}()
 
