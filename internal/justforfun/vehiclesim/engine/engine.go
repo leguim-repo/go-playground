@@ -1,7 +1,6 @@
 package engine
 
 import (
-	"go-playground/internal/justforfun/vehiclesim/gearbox"
 	"math"
 	"math/rand"
 )
@@ -29,14 +28,11 @@ type Engine struct {
 	// torque curve parameters
 	rpmMaxTorque float64 // RPM where maximum torque is reached
 	rpmMaxPower  float64 // RPM where maximum power is reached
-
-	Gearbox *gearbox.Gearbox
 }
 
-func NewEngine(theGearbox *gearbox.Gearbox) *Engine {
+func NewEngine() *Engine {
 
 	return &Engine{
-		Gearbox:               theGearbox,
 		Rpm:                   800, // Low Idle
 		torque:                0,
 		oilTemp:               80, // Initial oil temperature
@@ -61,10 +57,26 @@ func (m *Engine) SetAcceleratorPos(position float64) {
 	m.acceleratorPos = math.Max(0, math.Min(1, position))
 }
 
-func (m *Engine) Update(deltaTime float64) {
+// GetRPM retorna las revoluciones por minuto actuales del motor
+func (m *Engine) GetRPM() float64 {
+	return m.Rpm
+}
+
+// GetTorque retorna el torque actual del motor en Nm
+func (m *Engine) GetTorque() float64 {
+	return m.torque
+}
+
+// Update actualiza el estado del motor basado en acelerador y posición del clutch
+// Parameters:
+//
+//	clutchPosition: posición del clutch (0.0 = disengaged, 1.0 = engaged)
+//	deltaTime: tiempo transcurrido en segundos
+func (m *Engine) Update(clutchPosition float64, deltaTime float64) {
 
 	// Update RPM considering the clutch
-	clutchSlip := 1.0 - m.Gearbox.ClutchPosition
+	// Si el clutch está presionado (disengaged), el motor se ralentiza más libremente
+	clutchSlip := 1.0 - clutchPosition
 
 	// If the clutch is pressed (clutch disengaged), the engine spins more freely.
 	rpmDrop := m.Rpm * clutchSlip * 0.1
@@ -75,12 +87,9 @@ func (m *Engine) Update(deltaTime float64) {
 	m.UpdateTorque()
 	m.updateOilTemp(deltaTime)
 
-	// TODO: Improve coupling between engine and gearbox. This way is the best way? Maybe a better way is to have a channels between the engine goroutine and the gearbox goroutine.
-	// Coupling engine with the gearbox. The rpm engine is the gearbox input shaft
-	m.Gearbox.InputShaft = m.Rpm
-	m.Gearbox.InputShaftTorque = m.torque
-	// Update gearbox
-	m.Gearbox.Update(deltaTime)
+	// Nota: La orquestación del acoplamiento con la transmisión es responsabilidad
+	// de simulation.VehicleSimulation(), no de Engine.
+	// Engine ahora es un componente independiente que no conoce de la transmisión.
 }
 
 func (m *Engine) updateRPM(deltaTime float64) {

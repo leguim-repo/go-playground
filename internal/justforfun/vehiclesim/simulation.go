@@ -28,8 +28,8 @@ func VehicleSimulation() {
 	writeAPI := client.WriteAPIBlocking(config.Org, config.Bucket)
 
 	// Engine initialization and initial state
-	theGearbox := gearbox.NewGearbox()
-	theEngine := engine.NewEngine(theGearbox)
+	theGearbox := gearbox.NewManualGearbox()
+	theEngine := engine.NewEngine()
 	theBasicDifferential := differential.NewBasicDifferential(differential.TypeRDiffRatio)
 
 	wheelManager, err := wheels.NewWheelManager("245/40R19")
@@ -38,7 +38,10 @@ func VehicleSimulation() {
 	}
 
 	initializeEngineState(theEngine)
-	initializeGearboxState(theGearbox)
+	// Castear a ManualGearbox para inicialización
+	if manualGB, ok := theGearbox.(*gearbox.ManualGearbox); ok {
+		initializeGearboxState(manualGB)
+	}
 
 	// Simulation Setup
 	ticker := time.NewTicker(100 * time.Millisecond)
@@ -56,7 +59,10 @@ func VehicleSimulation() {
 	// Gear shift simulation
 	go func() {
 		<-ready // Wait for the start signal
-		simulateGearShifts(theEngine, theGearbox)
+		// Castear a ManualGearbox para acceso a métodos específicos
+		if manualGB, ok := theGearbox.(*gearbox.ManualGearbox); ok {
+			simulateGearShifts(theEngine, manualGB)
+		}
 	}()
 
 	// Signal that the simulation can begin
@@ -65,12 +71,26 @@ func VehicleSimulation() {
 
 	// Simulation main loop
 	for range ticker.C {
-		theEngine.Update(0.1)
-		theGearbox.Update(0.1)
-		theBasicDifferential.Update(theGearbox.OutputShaft, theGearbox.OutputShaftTorque, 0.0)
+		// Obtener posición del clutch de la transmisión para actualizar el motor
+		gearboxDataForClutch := gearbox.GetManualGearboxData(theGearbox)
+		clutchPos := gearboxDataForClutch.ClutchPosition
 
+		// Actualizar motor con posición del clutch (afecta ralentización)
+		theEngine.Update(clutchPos, 0.1)
+
+		// Obtener datos del motor actualizado
 		engineData := theEngine.GetData()
-		gearboxData := theGearbox.GetData()
+		engineRPM := theEngine.GetRPM()
+		engineTorque := theEngine.GetTorque()
+
+		// Actualizar transmisión con datos del motor como parámetros
+		theGearbox.Update(engineRPM, engineTorque, 0.1)
+
+		// Actualizar diferencial
+		theBasicDifferential.Update(theGearbox.GetOutputShaft(), theGearbox.GetOutputTorque(), 0.0)
+
+		// Obtener datos para telemetría
+		gearboxData := gearbox.GetManualGearboxData(theGearbox)
 		differentialData := theBasicDifferential.GetData()
 
 		wheelManager.WheelPair.Update(differentialData.WheelSpeedL, differentialData.WheelSpeedR)
@@ -104,7 +124,7 @@ func initializeEngineState(motor *engine.Engine) {
 
 }
 
-func initializeGearboxState(gearbox *gearbox.Gearbox) {
+func initializeGearboxState(gearbox *gearbox.ManualGearbox) {
 	// Initial state of the gearbox
 	gearbox.SetClutch(0.0) // Clutch pressed
 	gearbox.SetGear(0)     // Neutral
@@ -144,27 +164,27 @@ func simulateEngine(motor *engine.Engine) {
 	}
 }
 
-func simulateGearShifts(motor *engine.Engine, gearbox *gearbox.Gearbox) {
+func simulateGearShifts(motor *engine.Engine, manualGB *gearbox.ManualGearbox) {
 	// Short initial pause for stabilization
 	time.Sleep(2 * time.Second)
 
 	for {
 		engineData := motor.GetData()
-		gearboxData := gearbox.GetData()
+		gearboxData := gearbox.GetManualGearboxData(manualGB)
 
 		switch {
 		case engineData.RPM > 4000 && gearboxData.CurrentGear < 7:
-			performGearShift(motor, gearbox, gearbox.ShiftUp)
+			performGearShift(motor, manualGB, manualGB.ShiftUp)
 
 		case engineData.RPM < 2000 && gearboxData.CurrentGear > 1:
-			performGearShift(motor, gearbox, gearbox.ShiftDown)
+			performGearShift(motor, manualGB, manualGB.ShiftDown)
 		}
 
 		time.Sleep(500 * time.Millisecond)
 	}
 }
 
-func performGearShift(motor *engine.Engine, gearbox *gearbox.Gearbox, shiftGear func() bool) {
+func performGearShift(motor *engine.Engine, manualGB *gearbox.ManualGearbox, shiftGear func() bool) {
 	// Save the current throttle position
 	currentAccel := motor.GetData().AcceleratorPosition
 
@@ -172,7 +192,7 @@ func performGearShift(motor *engine.Engine, gearbox *gearbox.Gearbox, shiftGear 
 	motor.SetAcceleratorPos(0.3) // Reduce acceleration
 	time.Sleep(100 * time.Millisecond)
 
-	gearbox.SetClutch(0.0) // Press clutch
+	manualGB.SetClutch(0.0) // Press clutch
 	time.Sleep(200 * time.Millisecond)
 
 	shiftGear() // Change gear
@@ -180,7 +200,7 @@ func performGearShift(motor *engine.Engine, gearbox *gearbox.Gearbox, shiftGear 
 
 	// Release clutch gradually
 	for clutch := 0.0; clutch <= 1.0; clutch += 0.2 {
-		gearbox.SetClutch(clutch)
+		manualGB.SetClutch(clutch)
 		time.Sleep(50 * time.Millisecond)
 	}
 

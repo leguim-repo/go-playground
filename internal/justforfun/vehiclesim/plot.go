@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/influxdata/influxdb-client-go/v2/api/write"
 	"go-playground/internal/justforfun/vehiclesim/engine"
-	"go-playground/internal/justforfun/vehiclesim/gearbox"
 	"go-playground/internal/justforfun/vehiclesim/influx"
 	"log"
 	"time"
@@ -26,7 +25,7 @@ func PlotEngineTorqueCurve() {
 	// Generate torque curves for different throttle positions
 	acceleratorPositions := []float64{0.25, 0.5, 0.75, 1.0}
 
-	motor := engine.NewEngine(gearbox.NewGearbox())
+	motor := engine.NewEngine()
 
 	for _, position := range acceleratorPositions {
 		motor.SetAcceleratorPos(position)

@@ -2,7 +2,50 @@ package gearbox
 
 import "math"
 
-type Gearbox struct {
+// Gearbox define la interfaz para cualquier sistema de caja de cambios
+// Permite que diferentes tipos de cajas (manual, automática, CVT, etc.)
+// implementen su propia lógica de transformación RPM/Torque
+type Gearbox interface {
+	// Update procesa entrada de motor (RPM/Torque) y calcula salida a las ruedas
+	// Parámetros:
+	//   inputRPM: revoluciones por minuto del eje de entrada (desde motor)
+	//   inputTorque: torque en Nm del eje de entrada (desde motor)
+	//   deltaTime: tiempo transcurrido en segundos desde la última actualización
+	Update(inputRPM float64, inputTorque float64, deltaTime float64)
+
+	// GetData retorna telemetría completa de la caja de cambios
+	// Cada implementación retorna su propio tipo concreto (Telemetry, etc.)
+	GetData() interface{}
+
+	// GetOutputShaft retorna RPM en eje de salida (hacia diferenciales/ruedas)
+	GetOutputShaft() float64
+
+	// GetOutputTorque retorna torque en Nm en eje de salida
+	GetOutputTorque() float64
+
+	// SetClutch establece posición del clutch entre 0.0 (disengaged) y 1.0 (engaged)
+	SetClutch(position float64)
+
+	// ShiftUp intenta cambio a marcha superior
+	// Retorna true si el cambio fue exitoso, false si ya estaba en marcha máxima
+	ShiftUp() bool
+
+	// ShiftDown intenta cambio a marcha inferior
+	// Retorna true si el cambio fue exitoso, false si ya estaba en marcha mínima
+	ShiftDown() bool
+}
+
+// GetManualGearboxData es un helper que castea GetData() a Telemetry para ManualGearbox
+// Usado internamente para obtener datos tipados
+func GetManualGearboxData(g Gearbox) Telemetry {
+	if data, ok := g.GetData().(Telemetry); ok {
+		return data
+	}
+	return Telemetry{}
+}
+
+// ManualGearbox es la implementación manual de Gearbox
+type ManualGearbox struct {
 	currentGear    int
 	maxGears       int
 	gearRatios     []float64
@@ -24,8 +67,9 @@ type Gearbox struct {
 	outputShaftAcceleration float64
 }
 
-func NewGearbox() *Gearbox {
-	return &Gearbox{
+// NewManualGearbox crea una nueva instancia de caja de cambios manual
+func NewManualGearbox() Gearbox {
+	return &ManualGearbox{
 		currentGear:    0, // 0 = neutral
 		ClutchPosition: 0.0,
 		maxGears:       7,
@@ -58,11 +102,11 @@ func NewGearbox() *Gearbox {
 	}
 }
 
-func (g *Gearbox) SetClutch(position float64) {
+func (g *ManualGearbox) SetClutch(position float64) {
 	g.ClutchPosition = math.Max(0, math.Min(1, position))
 }
 
-func (g *Gearbox) ShiftUp() bool {
+func (g *ManualGearbox) ShiftUp() bool {
 	if g.currentGear < g.maxGears {
 		g.currentGear++
 		return true
@@ -70,7 +114,7 @@ func (g *Gearbox) ShiftUp() bool {
 	return false
 }
 
-func (g *Gearbox) ShiftDown() bool {
+func (g *ManualGearbox) ShiftDown() bool {
 	if g.currentGear > 0 {
 		g.currentGear--
 		return true
@@ -78,19 +122,19 @@ func (g *Gearbox) ShiftDown() bool {
 	return false
 }
 
-func (g *Gearbox) GetCurrentRatio() float64 {
+func (g *ManualGearbox) GetCurrentRatio() float64 {
 	return g.gearRatios[g.currentGear] * g.finalDrive
 }
 
 // setOutputShaft Calculates output shaft RPM based on input shaft RPM
-func (g *Gearbox) setOutputShaft(rpm float64) float64 {
+func (g *ManualGearbox) setOutputShaft(rpm float64) float64 {
 	if g.currentGear == 0 {
 		return 0
 	}
 	return rpm / (g.gearRatios[g.currentGear] * g.finalDrive)
 }
 
-func (g *Gearbox) SetGear(targetGear int) bool {
+func (g *ManualGearbox) SetGear(targetGear int) bool {
 	if targetGear >= 0 && targetGear <= g.maxGears {
 		g.currentGear = targetGear
 		return true
@@ -99,13 +143,13 @@ func (g *Gearbox) SetGear(targetGear int) bool {
 }
 
 // GetOutputShaftTorque Calculate the torque at the wheels
-func (g *Gearbox) GetOutputShaftTorque(engineTorque float64) float64 {
+func (g *ManualGearbox) GetOutputShaftTorque(engineTorque float64) float64 {
 	efficiency := 0.92 // Transmission efficiency
 	return engineTorque * g.GetCurrentRatio() * efficiency * g.ClutchPosition
 }
 
 // Function to calculate the inertia of the input shaft
-func (g *Gearbox) calculateInputShaftInertia() float64 {
+func (g *ManualGearbox) calculateInputShaftInertia() float64 {
 	// The inertia of the input shaft is affected by:
 	// - Clutch
 	// - Engine speed
@@ -116,7 +160,7 @@ func (g *Gearbox) calculateInputShaftInertia() float64 {
 }
 
 // Function to calculate the effective inertia of gears
-func (g *Gearbox) calculateGearInertia() float64 {
+func (g *ManualGearbox) calculateGearInertia() float64 {
 	if g.currentGear == 0 {
 		return 0 // In neutral, there is no effective inertia of the gears
 	}
@@ -133,7 +177,7 @@ func (g *Gearbox) calculateGearInertia() float64 {
 }
 
 // Function to calculate the inertia of the output shaft
-func (g *Gearbox) calculateOutputShaftInertia() float64 {
+func (g *ManualGearbox) calculateOutputShaftInertia() float64 {
 	// The inertia of the output shaft is affected by:
 	// - OutputShaftSpeed
 	// - Current torque
@@ -145,7 +189,7 @@ func (g *Gearbox) calculateOutputShaftInertia() float64 {
 }
 
 // Function to calculate the total inertia of the system
-func (g *Gearbox) calculateTotalInertia() float64 {
+func (g *ManualGearbox) calculateTotalInertia() float64 {
 	inputInertia := g.calculateInputShaftInertia()
 	gearInertia := g.calculateGearInertia()
 	outputInertia := g.calculateOutputShaftInertia()
@@ -154,7 +198,7 @@ func (g *Gearbox) calculateTotalInertia() float64 {
 }
 
 // Function to update angular accelerations
-func (g *Gearbox) updateAngularAccelerations(deltaTime float64) {
+func (g *ManualGearbox) updateAngularAccelerations(deltaTime float64) {
 	totalInertia := g.calculateTotalInertia()
 	if totalInertia > 0 {
 		// Calculate angular acceleration based on torque and inertia
@@ -163,19 +207,28 @@ func (g *Gearbox) updateAngularAccelerations(deltaTime float64) {
 	}
 }
 
-func (g *Gearbox) Update(deltaTime float64) {
-	// The InputShaft and InputShaftTorque is now updated from the engine. Check TODO of engine
+// Update implementa la interfaz Transmission
+// Procesa entrada de motor (inputRPM, inputTorque) y calcula salida a las ruedas
+// Parameters:
+//
+//	inputShaftRPM: revoluciones por minuto del eje de entrada (desde motor)
+//	inputShaftTorque: torque en Nm del eje de entrada (desde motor)
+//	deltaTime: tiempo transcurrido en segundos
+func (g *ManualGearbox) Update(inputShaftRPM float64, inputShaftTorque float64, deltaTime float64) {
+	// Store inputs para compatibilidad backwards (debugging)
+	g.InputShaft = inputShaftRPM
+	g.InputShaftTorque = inputShaftTorque
 
 	// Updates angular accelerations
 	g.updateAngularAccelerations(deltaTime)
 
 	if g.ClutchPosition > 0 {
 		// Calculate the exit velocity considering the inertias
-		baseOutputRPM := g.setOutputShaft(g.InputShaft)
+		baseOutputRPM := g.setOutputShaft(inputShaftRPM)
 		inertiaEffect := g.outputShaftAcceleration * deltaTime
 
 		g.OutputShaft = baseOutputRPM + (inertiaEffect * 9.549) // Convert rad/s² to RPM/s
-		g.OutputShaftTorque = g.GetOutputShaftTorque(g.InputShaftTorque)
+		g.OutputShaftTorque = g.GetOutputShaftTorque(inputShaftTorque)
 
 	} else {
 		// Clutch is disengaged, so the output shaft tends to zero
@@ -186,7 +239,20 @@ func (g *Gearbox) Update(deltaTime float64) {
 	}
 }
 
-func (g *Gearbox) GetData() Telemetry {
+// GetOutputShaft implementa la interfaz Transmission
+// Retorna RPM en eje de salida (hacia diferenciales/ruedas)
+func (g *ManualGearbox) GetOutputShaft() float64 {
+	return g.OutputShaft
+}
+
+// GetOutputTorque implementa la interfaz Transmission
+// Retorna torque en Nm en eje de salida (hacia diferenciales/ruedas)
+func (g *ManualGearbox) GetOutputTorque() float64 {
+	return g.OutputShaftTorque
+}
+
+// GetData implementa la interfaz Gearbox
+func (g *ManualGearbox) GetData() interface{} {
 	return Telemetry{
 		ClutchPosition:    g.ClutchPosition,
 		InputShaft:        g.InputShaft,
